@@ -30,7 +30,7 @@ fun HomePage(
         Column() {
             for (device in uiState.value.devices) {
                 Button(onClick = {}) {
-                    Text(device.deviceID.toString() + device.state.name)
+                    Text(device.deviceID.toString() + " " + device.state.name)
                 }
             }
         }

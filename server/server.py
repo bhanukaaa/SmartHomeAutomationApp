@@ -15,7 +15,8 @@ def main():
         username="pythonServer",
         password="12345678",
         subscriptions=[
-            "newDevice/user"
+            "newDevice/user",
+            "datasync/request"
         ]
     )
     mqttInterface.start()

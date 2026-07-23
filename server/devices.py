@@ -12,6 +12,7 @@ class Device:
     def __init__(self, deviceID):
         self.deviceID = deviceID
         self.state = DeviceState.OFF
+        self.name = ""
         self.type = ""
 
     def toggle(self):
@@ -24,6 +25,7 @@ class Device:
 class SingleUnit(Device):
     def __init__(self, deviceID):
         super().__init__(deviceID)
+        self.type = "SingleUnit"
 
         self.description = ""
 
@@ -31,6 +33,7 @@ class SingleUnit(Device):
 class MultiUnit(Device):
     def __init__(self, deviceID, size):
         super().__init__(deviceID)
+        self.type = "MultiUnit"
         self.size = size
         self.subUnits = []
 
@@ -42,5 +45,6 @@ class MultiUnit(Device):
 class SafetyCritical(Device):
     def __init__(self, deviceID, maxOnDuration):
         super().__init__(deviceID)
+        self.type = "SafetyCritical"
 
         self.maxOnDuration = maxOnDuration

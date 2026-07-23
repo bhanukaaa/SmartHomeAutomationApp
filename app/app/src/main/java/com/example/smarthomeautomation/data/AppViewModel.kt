@@ -18,10 +18,20 @@ class AppViewModel : ViewModel() {
     val sessionID = Random.nextInt()
 
     init {
+        MqttProvider.manager.subscribe("datasync/response") { topic, jsonData ->
+            viewModelScope.launch(Dispatchers.Default) {
+                dataSyncCallback(jsonData)
+            }
+        }
+
         MqttProvider.manager.subscribe("newDevice/server") { topic, jsonData ->
             viewModelScope.launch(Dispatchers.Default) {
                 newDeviceCallback(jsonData)
             }
+        }
+
+        MqttProvider.manager.onConnected {
+            sync()
         }
     }
 
@@ -63,5 +73,38 @@ class AppViewModel : ViewModel() {
             }
             currState.copy(devices = updatedList)
         }
+    }
+
+    fun dataSyncCallback(jsonData: JSONObject) {
+        val requesterID = jsonData.getInt("requesterID")
+        if (requesterID == sessionID) {
+            _uiState.update { currState ->
+                var deviceList: List<Device> = emptyList()
+
+                var syncList = jsonData.getJSONArray("devices")
+                for (i in 0 until syncList.length()) {
+                    val syncDevice = syncList.getJSONObject(i)
+                    deviceList += Device(
+                        syncDevice.getInt("deviceID"),
+                        DeviceState.valueOf(syncDevice.getString("state"))
+                    )
+                }
+
+                currState.copy(
+                    devices = deviceList
+                )
+            }
+            MqttProvider.manager.unsubscribe("datasync/response")
+        }
+    }
+
+    fun sync() {
+        val payload = JSONObject().apply {
+            put("requesterID", sessionID)
+        }
+        MqttProvider.manager.publish(
+            "datasync/request",
+            payload
+        )
     }
 }
