@@ -11,11 +11,7 @@ open class Device(
     var deviceID: Int,
     var state: DeviceState = DeviceState.OFF,
     var type: String = ""
-) {
-    fun setDeviceID(deviceID: Int) {
-        this.deviceID = deviceID
-    }
-}
+) {}
 
 class SingleUnit(
     deviceID: Int,

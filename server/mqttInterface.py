@@ -13,7 +13,8 @@ class MQTTInterface:
         self.deviceManager = None
 
         self.client = mqtt.Client(
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2
+        )
 
         self.client.on_connect = self.onConnect
         self.client.on_message = self.onMessage
@@ -24,18 +25,15 @@ class MQTTInterface:
     def onMessage(self, client, userdata, msg):
         try:
             payload = msg.payload.decode()
-            data = json.loads(payload)
+            jsonData = json.loads(payload)
             match msg.topic:
-                # case "user/deviceAction":
-                #     self.deviceManager.handleDeviceAction(data)
-                # case "datasync/request":
-                #     self.deviceManager.handleDataSync(data)
+                case "newDevice/user":
+                    self.deviceManager.handleNewDevice(jsonData)
                 case _:  # default
                     raise ValueError("Undefined Topic")
 
         except Exception:
-            print(
-                f"received non-JSON message: {msg.payload.decode()} on {msg.topic}")
+            print(f"Error: {msg.payload.decode()} on {msg.topic}")
 
     def onConnect(self, client, userdata, flags, reasonCode, properties):
         if reasonCode == 0:

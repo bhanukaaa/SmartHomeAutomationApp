@@ -1,7 +1,6 @@
-import time
-import json
 from mqttInterface import MQTTInterface
 from deviceManager import DeviceManager
+import time
 
 
 mqttInterface = None
@@ -15,7 +14,9 @@ def main():
         port=8883,
         username="pythonServer",
         password="12345678",
-        subscriptions=[]
+        subscriptions=[
+            "newDevice/user"
+        ]
     )
     mqttInterface.start()
 

@@ -6,33 +6,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import com.example.smarthomeautomation.data.AppUIState
 import com.example.smarthomeautomation.data.AppViewModel
 
 @Composable
-fun HomePage(
+fun AddDevicePage(
     viewModel: AppViewModel,
-    onAddDeviceButtonClick: () -> Unit = {}
+    onDeviceCreated: () -> Unit = {}
 ) {
-    val uiState = viewModel.uiState.collectAsState()
     Column(
-        verticalArrangement = Arrangement.SpaceAround,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
         Button(
-            onClick = onAddDeviceButtonClick
+            onClick = {
+                viewModel.addDeviceHandler()
+                onDeviceCreated()
+            }
         ) {
-            Text("Add Device")
+            Text("Add Basic Device")
         }
 
-        Column() {
-            for (device in uiState.value.devices) {
-                Button(onClick = {}) {
-                    Text(device.deviceID.toString() + device.state.name)
-                }
-            }
-        }
     }
+
 }

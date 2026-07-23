@@ -1,5 +1,6 @@
 package com.example.smarthomeautomation
 
+import android.util.Log
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import org.json.JSONObject
