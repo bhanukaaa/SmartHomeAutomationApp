@@ -27,8 +27,6 @@ class SingleUnit(Device):
         super().__init__(deviceID)
         self.type = "SingleUnit"
 
-        self.description = ""
-
 
 class MultiUnit(Device):
     def __init__(self, deviceID, size):

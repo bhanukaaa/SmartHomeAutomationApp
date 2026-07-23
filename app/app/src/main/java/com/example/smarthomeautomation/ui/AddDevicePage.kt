@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.smarthomeautomation.data.AppViewModel
 
+
 @Composable
 fun AddDevicePage(
     viewModel: AppViewModel,
@@ -26,7 +27,5 @@ fun AddDevicePage(
         ) {
             Text("Add Basic Device")
         }
-
     }
-
 }

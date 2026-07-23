@@ -30,6 +30,12 @@ class AppViewModel : ViewModel() {
             }
         }
 
+        MqttProvider.manager.subscribe("statusUpdate") { topic, jsonData ->
+            viewModelScope.launch(Dispatchers.Default) {
+                statusUpdateCallback(jsonData)
+            }
+        }
+
         MqttProvider.manager.onConnected {
             sync()
         }
@@ -57,6 +63,18 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun toggleDeviceHandler(deviceID: Int) {
+        val payload = JSONObject().apply {
+            put("deviceID", deviceID)
+            put("action", "toggle")
+        }
+
+        MqttProvider.manager.publish(
+            "deviceAction/user",
+            payload
+        )
+    }
+
     fun newDeviceCallback(jsonData: JSONObject) {
         val tempID = jsonData.optInt("tempID", -1)
         val newDeviceID = jsonData.optInt("deviceID", -1)
@@ -65,10 +83,8 @@ class AppViewModel : ViewModel() {
         _uiState.update { currState ->
             val updatedList = currState.devices.map { device ->
                 if (device.deviceID == tempID) {
-                    Device(deviceID = newDeviceID)
-                } else {
-                    device
-                }
+                    device.copy(deviceID = newDeviceID)
+                } else device
             }
             currState.copy(devices = updatedList)
         }
@@ -94,6 +110,21 @@ class AppViewModel : ViewModel() {
                 )
             }
             MqttProvider.manager.unsubscribe("datasync/response")
+        }
+    }
+
+    fun statusUpdateCallback(jsonData: JSONObject) {
+        val deviceID = jsonData.getInt("deviceID")
+
+        _uiState.update { currState ->
+            val updatedList = currState.devices.map { device ->
+                if (device.deviceID == deviceID) {
+                    device.copy(
+                        state = DeviceState.valueOf(jsonData.getString("state"))
+                    )
+                } else device
+            }
+            currState.copy(devices = updatedList)
         }
     }
 

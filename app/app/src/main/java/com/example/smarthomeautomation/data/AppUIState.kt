@@ -2,7 +2,7 @@ package com.example.smarthomeautomation.data
 
 data class AppUIState(
     val devices: List<Device> = emptyList(),
-    
+
     val sampleDevices: List<Device> = listOf(
         SingleUnit().apply {
             deviceID = 15

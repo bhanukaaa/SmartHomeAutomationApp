@@ -16,7 +16,8 @@ def main():
         password="12345678",
         subscriptions=[
             "newDevice/user",
-            "datasync/request"
+            "datasync/request",
+            "deviceAction/user"
         ]
     )
     mqttInterface.start()

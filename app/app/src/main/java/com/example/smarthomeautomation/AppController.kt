@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.smarthomeautomation.data.AppViewModel
 import com.example.smarthomeautomation.ui.AddDevicePage
 import com.example.smarthomeautomation.ui.HomePage
+import com.example.smarthomeautomation.ui.RoomPage
 
 enum class AppPages() {
     Home,

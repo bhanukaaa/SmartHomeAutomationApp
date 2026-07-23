@@ -29,8 +29,10 @@ fun HomePage(
         }
 
         Column() {
-            for (device in uiState.value.sampleDevices) {
-                Button(onClick = {}) {
+            for (device in uiState.value.devices) {
+                Button(onClick = {
+                    viewModel.toggleDeviceHandler(device.deviceID)
+                }) {
                     Text(device.deviceID.toString() + " " + device.state.name + " " + device.name)
                     if (device is SafetyCritical) {
                         Text(device.maxOnDuration.toString())

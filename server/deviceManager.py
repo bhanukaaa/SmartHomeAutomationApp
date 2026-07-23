@@ -52,3 +52,23 @@ class DeviceManager:
             "datasync/response",
             json.dumps(payload)
         )
+
+    def handleDeviceAction(self, jsonData):
+        deviceID = jsonData["deviceID"]
+        action = jsonData["action"]
+
+        payload = {
+            "deviceID": deviceID,
+        }
+        for device in self.devices:
+            if device.deviceID != deviceID:
+                continue
+
+            if action == "toggle":
+                device.toggle()
+                payload["state"] = device.state.name
+
+        self.mqttInterface.client.publish(
+            "statusUpdate",
+            json.dumps(payload)
+        )

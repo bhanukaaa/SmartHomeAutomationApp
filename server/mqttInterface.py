@@ -31,6 +31,8 @@ class MQTTInterface:
                     self.deviceManager.handleNewDevice(jsonData)
                 case "datasync/request":
                     self.deviceManager.handleDatasync(jsonData)
+                case "deviceAction/user":
+                    self.deviceManager.handleDeviceAction(jsonData)
                 case _:  # default
                     raise ValueError("Undefined Topic")
 
