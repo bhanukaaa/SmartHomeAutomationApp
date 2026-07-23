@@ -1,4 +1,5 @@
 package com.example.smarthomeautomation.data
 
-class AppUIState {
-}
+data class AppUIState(
+    val devices: List<Device> = emptyList()
+)
