@@ -60,7 +60,6 @@ class AppViewModel : ViewModel() {
     fun newDeviceCallback(jsonData: JSONObject) {
         val tempID = jsonData.optInt("tempID", -1)
         val newDeviceID = jsonData.optInt("deviceID", -1)
-
         if (tempID == -1 || newDeviceID == -1) return
 
         _uiState.update { currState ->
@@ -81,7 +80,7 @@ class AppViewModel : ViewModel() {
             _uiState.update { currState ->
                 var deviceList: List<Device> = emptyList()
 
-                var syncList = jsonData.getJSONArray("devices")
+                val syncList = jsonData.getJSONArray("devices")
                 for (i in 0 until syncList.length()) {
                     val syncDevice = syncList.getJSONObject(i)
                     deviceList += Device(

@@ -14,7 +14,8 @@ import com.example.smarthomeautomation.ui.HomePage
 
 enum class AppPages() {
     Home,
-    AddDevice
+    AddDevice,
+    Room
 }
 
 @Composable
@@ -46,6 +47,12 @@ fun AppController(
                 onDeviceCreated = {
                     navController.navigate(AppPages.Home.name)
                 }
+            )
+        }
+
+        composable(route = AppPages.Room.name) {
+            RoomPage(
+                viewModel = viewModel
             )
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.example.smarthomeautomation.data.AppUIState
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.data.SafetyCritical
 
 @Composable
 fun HomePage(
@@ -28,9 +29,12 @@ fun HomePage(
         }
 
         Column() {
-            for (device in uiState.value.devices) {
+            for (device in uiState.value.sampleDevices) {
                 Button(onClick = {}) {
-                    Text(device.deviceID.toString() + " " + device.state.name)
+                    Text(device.deviceID.toString() + " " + device.state.name + " " + device.name)
+                    if (device is SafetyCritical) {
+                        Text(device.maxOnDuration.toString())
+                    }
                 }
             }
         }

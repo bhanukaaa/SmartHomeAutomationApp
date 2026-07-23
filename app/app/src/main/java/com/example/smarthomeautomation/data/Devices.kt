@@ -8,23 +8,23 @@ enum class DeviceState {
 }
 
 open class Device(
-    var deviceID: Int,
+    var deviceID: Int = -1,
     var state: DeviceState = DeviceState.OFF,
+    var name: String = "",
     var type: String = ""
 ) {}
 
 class SingleUnit(
-    deviceID: Int,
-    var description: String = ""
+    deviceID: Int = -1
 ) : Device(deviceID)
 
 class MultiUnit(
-    deviceID: Int,
+    deviceID: Int = -1,
     val size: Int,
     val subUnits: MutableList<Device> = mutableListOf()
 ) : Device(deviceID)
 
 class SafetyCritical(
-    deviceID: Int,
+    deviceID: Int = -1,
     val maxOnDuration: Long
 ) : Device(deviceID)
