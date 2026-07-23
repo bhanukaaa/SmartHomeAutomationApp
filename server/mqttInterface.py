@@ -26,13 +26,16 @@ class MQTTInterface:
             payload = msg.payload.decode()
             data = json.loads(payload)
             match msg.topic:
-                case "user/deviceAction":
-                    self.deviceManager.handleDeviceAction(data)
-                case "datasync/request":
-                    self.deviceManager.handleDataSync(data)
+                # case "user/deviceAction":
+                #     self.deviceManager.handleDeviceAction(data)
+                # case "datasync/request":
+                #     self.deviceManager.handleDataSync(data)
+                case _:  # default
+                    raise ValueError("Undefined Topic")
 
         except Exception:
-            print(f"received non-JSON message: {msg.payload.decode()} on {msg.topic}")
+            print(
+                f"received non-JSON message: {msg.payload.decode()} on {msg.topic}")
 
     def onConnect(self, client, userdata, flags, reasonCode, properties):
         if reasonCode == 0:

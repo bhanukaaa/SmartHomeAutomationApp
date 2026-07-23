@@ -5,6 +5,8 @@ from deviceManager import DeviceManager
 
 
 mqttInterface = None
+deviceManager = None
+
 
 def main():
     global mqttInterface
@@ -16,6 +18,8 @@ def main():
         subscriptions=[]
     )
     mqttInterface.start()
+
+    global deviceManager
     deviceManager = DeviceManager(mqttInterface)
     mqttInterface.setDeviceManager(deviceManager)
 
@@ -24,13 +28,14 @@ def main():
 
 
 def backgroundLoop():
-    statusPayload = {
-        "status": "active",
-        "timestamp": time.time()
-    }
-    mqttInterface.client.publish("server/status", json.dumps(statusPayload))
+    # statusPayload = {
+    #     "status": "active",
+    #     "timestamp": time.time()
+    # }
+    # mqttInterface.client.publish("server/status", json.dumps(statusPayload))
 
     time.sleep(5)
+
 
 if __name__ == "__main__":
     main()
