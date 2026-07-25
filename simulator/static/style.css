@@ -1,0 +1,118 @@
+:root {
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --text: #f8fafc;
+  --text-muted: #64748b;
+  --border: #334155;
+  
+  /* Device States */
+  --state-on: #22c55e;
+  --state-off: #94a3b8;
+  --state-error: #ef4444;
+  --state-disconnected: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.badge-count {
+  font-size: 0.85rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: var(--text-muted);
+}
+
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.device-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.device-id {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.device-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-on { color: var(--state-on); }
+.status-on .dot { background-color: var(--state-on); box-shadow: 0 0 6px var(--state-on); }
+
+.status-off { color: var(--state-off); }
+.status-off .dot { background-color: var(--state-off); }
+
+.status-error { color: var(--state-error); }
+.status-error .dot { background-color: var(--state-error); box-shadow: 0 0 6px var(--state-error); }
+
+.status-disconnected { color: var(--state-disconnected); }
+.status-disconnected .dot { background-color: var(--state-disconnected); }
