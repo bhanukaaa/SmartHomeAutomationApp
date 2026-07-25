@@ -99,10 +99,17 @@ class AppViewModel : ViewModel() {
                 val syncList = jsonData.getJSONArray("devices")
                 for (i in 0 until syncList.length()) {
                     val syncDevice = syncList.getJSONObject(i)
-                    deviceList += Device(
-                        syncDevice.getInt("deviceID"),
-                        DeviceState.valueOf(syncDevice.getString("state"))
-                    )
+                    val id = syncDevice.getInt("deviceID")
+                    val state = DeviceState.valueOf(syncDevice.getString("state"))
+                    val name = syncDevice.optString("name", "Device $id")
+                    val type = syncDevice.optString("type", "SingleUnit")
+
+                    val device = when (type) {
+                        "SafetyCritical" -> SafetyCritical(id, syncDevice.optLong("maxOnDuration", 3600L), state, name, type)
+                        "MultiUnit" -> MultiUnit(id, syncDevice.optInt("size", 1), state = state, name = name, type = type)
+                        else -> SingleUnit(id, state, name, type)
+                    }
+                    deviceList += device
                 }
 
                 currState.copy(
