@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Monitor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Socket.IO library to receive live updates from app.py -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Devices</h1>
+      <div class="badge-count"><span id="device-count">0</span> Active</div>
+    </header>
+
+    <div class="device-list" id="deviceList"></div>
+  </div>
+
+  <script>
+    // Connect to Flask-SocketIO backend
+    const socket = io();
+
+    const DeviceState = {
+      1: { name: "ON", class: "status-on" },
+      2: { name: "OFF", class: "status-off" },
+      3: { name: "ERROR", class: "status-error" },
+      4: { name: "DISCONNECTED", class: "status-disconnected" }
+    };
+
+    let devices = [];
+
+    // Receive initial device state when page loads
+    socket.on('initial_devices', function(initialDevices) {
+      document.getElementById("deviceList").innerHTML = "";
+      devices = initialDevices;
+      devices.forEach(device => renderDeviceCard(device));
+      updateDeviceCount();
+    });
+
+    // Receive new device event pushed from MQTT -> Flask
+    socket.on('device_added', function(device) {
+      if (!devices.some(d => d.deviceID === device.deviceID)) {
+        devices.push(device);
+        renderDeviceCard(device);
+        updateDeviceCount();
+      }
+    });
+
+    // Receive device status changes (e.g. toggle)
+    socket.on('device_updated', function(device) {
+      const idx = devices.findIndex(d => d.deviceID === device.deviceID);
+      if (idx !== -1) {
+        devices[idx].state = device.state;
+        updateDeviceCardUI(device);
+      }
+    });
+
+    function renderDeviceCard(device) {
+      const listContainer = document.getElementById("deviceList");
+      const stateInfo = DeviceState[device.state] || DeviceState[2];
+
+      const card = document.createElement("div");
+      card.className = "device-card";
+      card.id = `device-${device.deviceID}`;
+
+      card.innerHTML = `
+        <div class="device-info">
+          <span class="device-id">Device #${device.deviceID}</span>
+        </div>
+        <div class="status-pill ${stateInfo.class}" id="status-pill-${device.deviceID}">
+          <span class="dot"></span> 
+          <span class="status-text">${stateInfo.name}</span>
+        </div>
+      `;
+
+      listContainer.appendChild(card);
+    }
+
+    function updateDeviceCardUI(device) {
+      const stateInfo = DeviceState[device.state] || DeviceState[2];
+      const pillElement = document.getElementById(`status-pill-${device.deviceID}`);
+      if (pillElement) {
+        pillElement.className = `status-pill ${stateInfo.class}`;
+        pillElement.querySelector('.status-text').innerText = stateInfo.name;
+      }
+    }
+
+    function updateDeviceCount() {
+      document.getElementById("device-count").innerText = devices.length;
+    }
+  </script>
+</body>
+</html>
