@@ -32,22 +32,6 @@ class DeviceManager:
             case _:
                 return Device(assignedID, name, deviceType)
 
-    def handleNewDevice(self, jsonData):
-        tempID = jsonData["tempID"]
-        newDevice = self.parseIncomingDevice(jsonData)
-
-        self.devices.append(newDevice)
-
-        payload = {
-            "deviceID": newDevice.deviceID,
-            "tempID": tempID
-        }
-
-        self.mqttInterface.client.publish(
-            "newDevice/server",
-            json.dumps(payload)
-        )
-
     def serializeDevice(self, device):
         encoded = {
             "deviceID": device.deviceID,
@@ -65,6 +49,20 @@ class DeviceManager:
                     sub) for sub in device.subUnits]
 
         return encoded
+
+    def handleNewDevice(self, jsonData):
+        tempID = jsonData["tempID"]
+        newDevice = self.parseIncomingDevice(jsonData)
+
+        self.devices.append(newDevice)
+
+        payload = self.serializeDevice(newDevice)
+        payload["tempID"] = tempID
+
+        self.mqttInterface.client.publish(
+            "newDevice/server",
+            json.dumps(payload)
+        )
 
     def handleDatasync(self, jsonData):
         requesterID = jsonData["requesterID"]
@@ -97,13 +95,16 @@ class DeviceManager:
         action = jsonData["action"]
 
         payload = {
-            "deviceID": deviceID
+            "deviceID": deviceID,
+            "status": "Error",
+            "action": action
         }
 
         if action == "toggle":
             newState = self.findAndToggle(self.devices, deviceID)
             if newState != None:
                 payload["state"] = newState
+                payload["status"] = "success"
 
         self.mqttInterface.client.publish(
             "statusUpdate",

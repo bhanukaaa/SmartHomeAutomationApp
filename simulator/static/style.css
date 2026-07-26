@@ -116,3 +116,17 @@ h1 {
 
 .status-disconnected { color: var(--state-disconnected); }
 .status-disconnected .dot { background-color: var(--state-disconnected); }
+
+.sub-units {
+  margin-top: 10px;
+  padding-left: 20px;
+  border-left: 2px solid #333;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sub-units .device-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  margin-bottom: 0;
+}

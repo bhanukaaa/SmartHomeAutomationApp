@@ -1,7 +1,14 @@
 version: '3.8'
 
 services:
-  smart-home-server:
+  server:
     build: ./server
-    container_name: smart-home-server
-    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    restart: always
+
+  simulator:
+    build: ./simulator
+    ports:
+      - "5001:5000"
+    restart: always

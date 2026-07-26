@@ -38,8 +38,8 @@ fun RoomPage(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // val allDevices = uiState.devices          // real devices from server
-    val allDevices = uiState.sampleDevices       // sample devices
+     val allDevices = uiState.devices          // real devices from server
+//    val allDevices = uiState.sampleDevices       // sample devices
 
 
     // Hard-coded mapping for sample devices
