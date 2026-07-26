@@ -2,6 +2,6 @@ version: '3.8'
 
 services:
   smart-home-server:
-    build: ./python-server
+    build: ./server
     container_name: smart-home-server
     restart: unless-stopped

@@ -14,7 +14,7 @@ data class AppUIState(
             deviceID = 22
             name = "Front Door Lock"
             type = "SingleUnit"
-            state = DeviceState.OFF
+            state = DeviceState.DISCONNECTED
         },
         SingleUnit().apply {
             deviceID = 45
@@ -38,7 +38,7 @@ data class AppUIState(
             deviceID = 27
             name = "Ceiling Lamp"
             type = "SingleUnit"
-            state = DeviceState.OFF
+            state = DeviceState.ERROR
         },
         SafetyCritical(maxOnDuration = 1800L).apply {
             deviceID = 34

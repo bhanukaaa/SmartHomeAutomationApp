@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.smarthomeautomation.ui.HomePage
+import com.example.smarthomeautomation.ui.AppController
 import com.example.smarthomeautomation.ui.theme.SmartHomeAutomationTheme
 
 class MainActivity : ComponentActivity() {
