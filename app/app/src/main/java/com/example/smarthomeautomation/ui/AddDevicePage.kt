@@ -68,30 +68,7 @@ fun AddDevicePage(
     val scrollState = rememberScrollState()
     val maxSubUnits = sizeInput.toIntOrNull() ?: 0
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Add Device",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onDeviceCreated) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
+    Scaffold() { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -198,7 +175,7 @@ fun AddDevicePage(
                             OutlinedTextField(
                                 value = maxOnDurationInput,
                                 onValueChange = { maxOnDurationInput = it },
-                                label = { Text("Max On Duration (ms)") },
+                                label = { Text("Max On Duration (s)") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()

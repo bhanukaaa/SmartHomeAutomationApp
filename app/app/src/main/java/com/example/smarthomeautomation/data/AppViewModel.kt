@@ -52,16 +52,16 @@ class AppViewModel : ViewModel() {
         _uiState.update { currState ->
             currState.copy(
                 currentFloorName = floorName,
-                currentRoomId = null
+                currentRoomID = null
             )
         }
     }
 
-    fun selectRoom(roomId: Int?) {
+    fun selectRoom(roomID: Int?) {
         _uiState.update { currState ->
-            val selectedRoom = currState.rooms.find { it.roomId == roomId }
+            val selectedRoom = currState.rooms.find { it.roomID == roomID }
             currState.copy(
-                currentRoomId = roomId,
+                currentRoomID = roomID,
                 currentFloorName = selectedRoom?.floorName ?: currState.currentFloorName
             )
         }
@@ -82,18 +82,18 @@ class AppViewModel : ViewModel() {
     }
 
     fun addDeviceHandler(device: Device) {
-        val targetRoomId = _uiState.value.currentRoomId ?: return
+        val targetRoomID = _uiState.value.currentRoomID ?: return
         val newDevice = assignTempIDs(device)
 
         _uiState.update { currState ->
             val updatedRooms = currState.rooms.map { room ->
-                if (room.roomId == targetRoomId) {
+                if (room.roomID == targetRoomID) {
                     room.copy(devices = room.devices + newDevice)
                 } else room
             }
 
             val updatedRegistry = currState.deviceRegistry.toMutableMap().apply {
-                putAll(registerDeviceIds(newDevice, targetRoomId))
+                putAll(registerDeviceIDs(newDevice, targetRoomID))
             }
 
             currState.copy(rooms = updatedRooms, deviceRegistry = updatedRegistry)
@@ -103,7 +103,7 @@ class AppViewModel : ViewModel() {
             fun serializeDevice(dev: Device): Map<String, Any> {
                 val map = mutableMapOf<String, Any>(
                     "tempID" to dev.deviceID,
-                    "roomId" to targetRoomId,
+                    "roomID" to targetRoomID,
                     "name" to dev.name,
                     "type" to dev.type
                 )
@@ -130,11 +130,11 @@ class AppViewModel : ViewModel() {
     }
 
     fun addRoomHandler(name: String, floorName: String) {
-        val tempRoomId = Random.nextInt()
+        val tempRoomID = Random.nextInt()
         val finalFloorName = floorName.ifBlank { "G" }
 
         val newRoom = Room(
-            roomId = tempRoomId,
+            roomID = tempRoomID,
             name = name,
             floorName = finalFloorName,
             devices = emptyList()
@@ -144,13 +144,13 @@ class AppViewModel : ViewModel() {
             currState.copy(
                 rooms = currState.rooms + newRoom,
                 currentFloorName = finalFloorName,
-                currentRoomId = tempRoomId
+                currentRoomID = tempRoomID
             )
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             val payload = JSONObject().apply {
-                put("tempRoomID", tempRoomId)
+                put("tempRoomID", tempRoomID)
                 put("name", name)
                 put("floorName", finalFloorName)
             }
@@ -183,10 +183,10 @@ class AppViewModel : ViewModel() {
                 val newDeviceID = json.optInt("deviceID", -1)
 
                 if (tempID != -1 && newDeviceID != -1) {
-                    val targetRoomId = currState.deviceRegistry[tempID]
-                    if (targetRoomId != null) {
+                    val targetRoomID = currState.deviceRegistry[tempID]
+                    if (targetRoomID != null) {
                         updatedMap.remove(tempID)
-                        updatedMap[newDeviceID] = targetRoomId
+                        updatedMap[newDeviceID] = targetRoomID
                     }
                 }
 
@@ -220,10 +220,10 @@ class AppViewModel : ViewModel() {
             processDeviceMapping(jsonData)
 
             val topTempID = jsonData.optInt("tempID", -1)
-            val targetRoomId = currState.deviceRegistry[topTempID] ?: return@update currState
+            val targetRoomID = currState.deviceRegistry[topTempID] ?: return@update currState
 
             val updatedRooms = currState.rooms.map { room ->
-                if (room.roomId != targetRoomId) room
+                if (room.roomID != targetRoomID) room
                 else room.copy(devices = room.devices.map { updateDeviceID(it, jsonData) })
             }
 
@@ -268,12 +268,12 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    private fun registerDeviceIds(device: Device, roomId: Int): Map<Int, Int> {
+    private fun registerDeviceIDs(device: Device, roomID: Int): Map<Int, Int> {
         val map = mutableMapOf<Int, Int>()
-        map[device.deviceID] = roomId
+        map[device.deviceID] = roomID
         if (device is MultiUnit) {
             device.subUnits.forEach { sub ->
-                map.putAll(registerDeviceIds(sub, roomId))
+                map.putAll(registerDeviceIDs(sub, roomID))
             }
         }
         return map
@@ -289,7 +289,7 @@ class AppViewModel : ViewModel() {
                 val syncRooms = jsonData.optJSONArray("rooms") ?: JSONArray()
                 for (i in 0 until syncRooms.length()) {
                     val roomJson = syncRooms.getJSONObject(i)
-                    val roomId = roomJson.getInt("roomId")
+                    val roomID = roomJson.getInt("roomID")
                     val name = roomJson.optString("name", "")
                     val floorName = roomJson.optString("floorName", "G")
 
@@ -299,20 +299,20 @@ class AppViewModel : ViewModel() {
                     for (j in 0 until devicesArray.length()) {
                         val parsedDevice = parseDevice(devicesArray.getJSONObject(j))
                         deviceList.add(parsedDevice)
-                        registry.putAll(registerDeviceIds(parsedDevice, roomId))
+                        registry.putAll(registerDeviceIDs(parsedDevice, roomID))
                     }
 
-                    roomList.add(Room(roomId, name, floorName, deviceList))
+                    roomList.add(Room(roomID, name, floorName, deviceList))
                 }
 
                 val initialFloorName = roomList.firstOrNull()?.floorName ?: "G"
-                val initialRoomId = roomList.firstOrNull()?.roomId
+                val initialRoomID = roomList.firstOrNull()?.roomID
 
                 currState.copy(
                     rooms = roomList,
                     deviceRegistry = registry,
                     currentFloorName = initialFloorName,
-                    currentRoomId = initialRoomId
+                    currentRoomID = initialRoomID
                 )
             }
             MqttProvider.manager.unsubscribe("datasync/response")
@@ -322,29 +322,29 @@ class AppViewModel : ViewModel() {
     fun newRoomCallback(jsonData: JSONObject) {
         val tempRoomID = jsonData.optInt("tempRoomID", -1)
         val roomObj = jsonData.optJSONObject("room") ?: return
-        val newRoomID = roomObj.optInt("roomId", -1)
+        val newRoomID = roomObj.optInt("roomID", -1)
 
         if (tempRoomID == -1 || newRoomID == -1) return
 
         _uiState.update { currState ->
             val updatedRooms = currState.rooms.map { room ->
-                if (room.roomId == tempRoomID) {
-                    room.copy(roomId = newRoomID)
+                if (room.roomID == tempRoomID) {
+                    room.copy(roomID = newRoomID)
                 } else room
             }
 
-            val updatedRegistry = currState.deviceRegistry.mapValues { (_, roomId) ->
-                if (roomId == tempRoomID) newRoomID else roomId
+            val updatedRegistry = currState.deviceRegistry.mapValues { (_, roomID) ->
+                if (roomID == tempRoomID) newRoomID else roomID
             }
 
-            val updatedCurrentRoomId = if (currState.currentRoomId == tempRoomID) {
+            val updatedCurrentRoomID = if (currState.currentRoomID == tempRoomID) {
                 newRoomID
-            } else currState.currentRoomId
+            } else currState.currentRoomID
 
             currState.copy(
                 rooms = updatedRooms,
                 deviceRegistry = updatedRegistry,
-                currentRoomId = updatedCurrentRoomId
+                currentRoomID = updatedCurrentRoomID
             )
         }
     }
@@ -353,7 +353,7 @@ class AppViewModel : ViewModel() {
         val deviceID = jsonData.getInt("deviceID")
 
         _uiState.update { currState ->
-            val targetRoomId = currState.deviceRegistry[deviceID] ?: return@update currState
+            val targetRoomID = currState.deviceRegistry[deviceID] ?: return@update currState
 
             fun updateDeviceState(device: Device): Device {
                 val updatedDevice = if (device.deviceID == deviceID) {
@@ -372,7 +372,7 @@ class AppViewModel : ViewModel() {
             }
 
             val updatedRooms = currState.rooms.map { room ->
-                if (room.roomId != targetRoomId) room
+                if (room.roomID != targetRoomID) room
                 else room.copy(devices = room.devices.map { updateDeviceState(it) })
             }
 

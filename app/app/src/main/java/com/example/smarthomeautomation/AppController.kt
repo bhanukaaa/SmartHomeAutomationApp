@@ -32,8 +32,8 @@ fun AppController(
                 onAddRoomButtonClick = {
                     navController.navigate(AppPages.AddRoom.name)
                 },
-                onRoomClick = { roomId ->
-                    viewModel.selectRoom(roomId)
+                onRoomClick = { roomID ->
+                    viewModel.selectRoom(roomID)
                     navController.navigate(AppPages.Room.name)
                 }
             )

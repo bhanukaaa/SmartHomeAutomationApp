@@ -85,22 +85,7 @@ fun HomePage(
 
     val currentFloorName = floors.getOrNull(pagerState.currentPage) ?: "G"
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Floor $currentFloorName",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { innerPadding ->
+    Scaffold() { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,7 +97,7 @@ fun HomePage(
             ) {
                 items(floors, key = { it }) { floorName ->
                     FilterChip(
-                        selected = floorName.equals(uiState.currentFloorName, ignoreCase = true),
+                        selected = floorName.equals(currentFloorName, ignoreCase = true),
                         onClick = {
                             val targetIndex = floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
                             if (targetIndex >= 0) {
@@ -122,7 +107,7 @@ fun HomePage(
                                 }
                             }
                         },
-                        label = { Text("Floor $floorName") }
+                        label = { Text(floorName) }
                     )
                 }
             }
@@ -175,12 +160,12 @@ fun HomePage(
                             }
                         }
 
-                        items(roomsOnFloor, key = { it.roomId }) { room ->
+                        items(roomsOnFloor, key = { it.roomID }) { room ->
                             RoomCard(
                                 room = room,
                                 onClick = {
-                                    viewModel.selectRoom(room.roomId)
-                                    onRoomClick(room.roomId)
+                                    viewModel.selectRoom(room.roomID)
+                                    onRoomClick(room.roomID)
                                 }
                             )
                         }

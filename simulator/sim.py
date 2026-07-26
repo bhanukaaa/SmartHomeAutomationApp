@@ -79,15 +79,15 @@ class SafetyCritical(Device):
 
 
 class Room:
-    def __init__(self, roomId, name, floorName="G", devices=None):
-        self.roomId = roomId
+    def __init__(self, roomID, name, floorName="G", devices=None):
+        self.roomID = roomID
         self.name = name
         self.floorName = floorName
         self.devices = devices if devices is not None else []
 
     def toDict(self):
         return {
-            "roomId": self.roomId,
+            "roomID": self.roomID,
             "name": self.name,
             "floorName": self.floorName,
             "devices": [d.toDict() for d in self.devices]
@@ -125,13 +125,13 @@ class DeviceManager:
         return dev
 
     def parseRoomData(self, jsonData):
-        roomId = jsonData.get("roomId")
+        roomID = jsonData.get("roomID")
         name = jsonData.get("name", "")
         floorName = jsonData.get("floorName", "G")
         devicesData = jsonData.get("devices", [])
 
         devices = [self.parseDeviceData(d) for d in devicesData]
-        return Room(roomId, name, floorName, devices)
+        return Room(roomID, name, floorName, devices)
 
     def addNewRoom(self, jsonData):
         roomData = jsonData.get("room", {})
@@ -140,15 +140,15 @@ class DeviceManager:
         socketio.emit('room_added', newRoom.toDict())
 
     def addNewDevice(self, jsonData):
-        targetRoomId = jsonData.get("roomId")
+        targetRoomID = jsonData.get("roomID")
         newDevice = self.parseDeviceData(jsonData)
 
-        targetRoom = next((r for r in self.rooms if r.roomId == targetRoomId), None)
+        targetRoom = next((r for r in self.rooms if r.roomID == targetRoomID), None)
         if targetRoom:
             targetRoom.devices.append(newDevice)
 
         socketio.emit('device_added', {
-            "roomId": targetRoomId,
+            "roomID": targetRoomID,
             "device": newDevice.toDict()
         })
 

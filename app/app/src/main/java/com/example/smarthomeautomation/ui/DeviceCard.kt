@@ -124,7 +124,7 @@ fun DeviceCard(
                         if (device is SafetyCritical) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "${device.maxOnDuration / 1000}s max",
+                                text = "${device.maxOnDuration}s max",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

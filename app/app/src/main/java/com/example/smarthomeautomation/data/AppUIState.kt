@@ -1,7 +1,7 @@
 package com.example.smarthomeautomation.data
 
 data class Room(
-    val roomId: Int,
+    val roomID: Int,
     val name: String,
     val floorName: String = "G",
     val devices: List<Device> = emptyList()
@@ -11,5 +11,5 @@ data class AppUIState(
     val rooms: List<Room> = emptyList(),
     val deviceRegistry: Map<Int, Int> = emptyMap(),
     val currentFloorName: String = "G",
-    val currentRoomId: Int? = null
+    val currentRoomID: Int? = null
 )

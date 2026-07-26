@@ -1,6 +1,7 @@
 from mqttInterface import MQTTInterface
-from devices import Device, SingleUnit, MultiUnit, SafetyCritical, Room
+from devices import Device, SingleUnit, MultiUnit, SafetyCritical, Room, DeviceState
 import json
+import time
 
 
 class DeviceManager:
@@ -55,13 +56,14 @@ class DeviceManager:
                 encoded["maxOnDuration"] = device.maxOnDuration
             case "MultiUnit":
                 encoded["size"] = device.size
-                encoded["subUnits"] = [self.serializeDevice(sub) for sub in device.subUnits]
+                encoded["subUnits"] = [self.serializeDevice(
+                    sub) for sub in device.subUnits]
 
         return encoded
 
     def serializeRoom(self, room):
         return {
-            "roomId": room.roomId,
+            "roomID": room.roomID,
             "name": room.name,
             "floorName": room.floorName,
             "devices": [self.serializeDevice(dev) for dev in room.devices]
@@ -74,7 +76,7 @@ class DeviceManager:
 
         self.currRoomID += 1
         newRoom = Room(
-            roomId=self.currRoomID,
+            roomID=self.currRoomID,
             name=roomName,
             floorName=floorName
         )
@@ -92,17 +94,17 @@ class DeviceManager:
 
     def handleNewDevice(self, jsonData):
         tempID = jsonData["tempID"]
-        targetRoomID = jsonData.get("roomId")
+        targetRoomID = jsonData.get("roomID")
         newDevice = self.parseIncomingDevice(jsonData)
 
         targetRoom = next(
-            (r for r in self.rooms if r.roomId == targetRoomID), None)
+            (r for r in self.rooms if r.roomID == targetRoomID), None)
         if targetRoom:
             targetRoom.devices.append(newDevice)
 
         payload = self.serializeDevice(newDevice)
         payload["tempID"] = tempID
-        payload["roomId"] = targetRoomID
+        payload["roomID"] = targetRoomID
 
         self.mqttInterface.client.publish(
             "newDevice/server",
@@ -129,6 +131,9 @@ class DeviceManager:
         for device in devices:
             if device.deviceID == deviceID:
                 device.toggle()
+
+                if device.type == "SafetyCritical" and device.state == DeviceState.ON:
+                    device.turnOnTime = time.time()
 
                 payload = {
                     "deviceID": device.deviceID,
@@ -165,3 +170,14 @@ class DeviceManager:
                 "statusUpdate",
                 json.dumps(payload)
             )
+
+
+    def checkSafetyDevices(self):
+        now = time.time()
+
+        for room in self.rooms:
+            for device in room.devices:
+                if device.type == "SafetyCritical" and device.state == DeviceState.ON:
+                    turnOnTime = getattr(device, "turnOnTime", None)
+                    if turnOnTime and (now - turnOnTime) >= device.maxOnDuration:
+                        self.findAndToggle(device.deviceID)

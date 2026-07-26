@@ -32,13 +32,10 @@ def main():
 
 
 def backgroundLoop():
-    # statusPayload = {
-    #     "status": "active",
-    #     "timestamp": time.time()
-    # }
-    # mqttInterface.client.publish("server/status", json.dumps(statusPayload))
+    if deviceManager:
+        deviceManager.checkSafetyDevices()
 
-    time.sleep(5)
+    time.sleep(1)
 
 
 if __name__ == "__main__":

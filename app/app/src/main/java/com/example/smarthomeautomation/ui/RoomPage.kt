@@ -37,8 +37,8 @@ fun RoomPage(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val currentRoom = remember(uiState.rooms, uiState.currentRoomId) {
-        uiState.rooms.find { it.roomId == uiState.currentRoomId }
+    val currentRoom = remember(uiState.rooms, uiState.currentRoomID) {
+        uiState.rooms.find { it.roomID == uiState.currentRoomID }
     }
 
     Scaffold(

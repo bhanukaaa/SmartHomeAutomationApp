@@ -42,7 +42,7 @@
             });
 
             socket.on("room_added", function (room) {
-                if (!rooms.some((r) => r.roomId === room.roomId)) {
+                if (!rooms.some((r) => r.roomID === room.roomID)) {
                     rooms.push(room);
                     renderAll();
                 }
@@ -50,7 +50,7 @@
 
             socket.on("device_added", function (payload) {
                 const targetRoom = rooms.find(
-                    (r) => r.roomId === payload.roomId,
+                    (r) => r.roomID === payload.roomID,
                 );
                 if (targetRoom) {
                     if (
@@ -163,7 +163,7 @@
 
                 let extraDetails = "";
                 if (device.type === "SafetyCritical" && device.maxOnDuration) {
-                    extraDetails = `<span class="extra-info">${device.maxOnDuration}ms max</span>`;
+                    extraDetails = `<span class="extra-info">${device.maxOnDuration}s max</span>`;
                 } else if (device.type === "MultiUnit" && device.size) {
                     extraDetails = `<span class="extra-info">${device.size} units</span>`;
                 }
