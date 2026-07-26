@@ -1,24 +1,45 @@
 from mqttInterface import MQTTInterface
-from devices import Device
+from devices import Device, SingleUnit, MultiUnit, SafetyCritical
 import json
 
 
 class DeviceManager:
     def __init__(self, mqttInterface: "MQTTInterface"):
-        self.currID = 1
+        self.currID = 0
         self.devices = []
         self.mqttInterface = mqttInterface
 
+    def parseIncomingDevice(self, jsonData):
+        deviceType = jsonData.get("type", "")
+        name = jsonData.get("name", "")
+
+        self.currID += 1
+        assignedID = self.currID
+
+        match deviceType:
+            case "SingleUnit":
+                return SingleUnit(assignedID, name)
+            case "MultiUnit":
+                size = jsonData.get("size", 0)
+                subUnitsData = jsonData.get("subUnits", [])
+                parsedSubUnits = []
+                for subData in subUnitsData:
+                    parsedSubUnits.append(self.parseIncomingDevice(subData))
+                return MultiUnit(assignedID, name, size, parsedSubUnits)
+            case "SafetyCritical":
+                maxOnDuration = jsonData.get("maxOnDuration", 0)
+                return SafetyCritical(assignedID, name, maxOnDuration)
+            case _:
+                return Device(assignedID, name, deviceType)
+
     def handleNewDevice(self, jsonData):
         tempID = jsonData["tempID"]
-
-        newDevice = Device(self.currID)
-        self.currID += 1
+        newDevice = self.parseIncomingDevice(jsonData)
 
         self.devices.append(newDevice)
 
         payload = {
-            "deviceID": self.devices[-1].deviceID,
+            "deviceID": newDevice.deviceID,
             "tempID": tempID
         }
 
@@ -27,46 +48,62 @@ class DeviceManager:
             json.dumps(payload)
         )
 
+    def serializeDevice(self, device):
+        encoded = {
+            "deviceID": device.deviceID,
+            "state": device.state.name,
+            "name": device.name,
+            "type": device.type
+        }
+
+        match device.type:
+            case "SafetyCritical":
+                encoded["maxOnDuration"] = device.maxOnDuration
+            case "MultiUnit":
+                encoded["size"] = device.size
+                encoded["subUnits"] = [self.serializeDevice(
+                    sub) for sub in device.subUnits]
+
+        return encoded
+
     def handleDatasync(self, jsonData):
         requesterID = jsonData["requesterID"]
 
         payload = {
             "requesterID": requesterID,
             "numDevices": len(self.devices),
-            "devices": []
+            "devices": [self.serializeDevice(dev) for dev in self.devices]
         }
-
-        for device in self.devices:
-            encoded = {}
-            encoded["deviceID"] = device.deviceID
-            encoded["state"] = device.state.name
-            encoded["name"] = device.name
-
-            match device.type:
-                case "SafetyCritical":
-                    encoded["maxOnDuration"] = device.maxOnDuration
-
-            payload["devices"].append(encoded)
 
         self.mqttInterface.client.publish(
             "datasync/response",
             json.dumps(payload)
         )
 
+    def findAndToggle(self, devices, deviceID):
+        for device in devices:
+            if device.deviceID == deviceID:
+                device.toggle()
+                return device.state.name
+
+            if device.type == "MultiUnit":
+                res = self.findAndToggle(device.subUnits, deviceID)
+                if res != None:
+                    return res
+        return None
+
     def handleDeviceAction(self, jsonData):
         deviceID = jsonData["deviceID"]
         action = jsonData["action"]
 
         payload = {
-            "deviceID": deviceID,
+            "deviceID": deviceID
         }
-        for device in self.devices:
-            if device.deviceID != deviceID:
-                continue
 
-            if action == "toggle":
-                device.toggle()
-                payload["state"] = device.state.name
+        if action == "toggle":
+            newState = self.findAndToggle(self.devices, deviceID)
+            if newState != None:
+                payload["state"] = newState
 
         self.mqttInterface.client.publish(
             "statusUpdate",

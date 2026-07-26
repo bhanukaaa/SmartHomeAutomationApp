@@ -29,7 +29,12 @@ class SingleUnit(
     name: String = "",
     type: String = ""
 ) : Device(deviceID, state, name, type) {
-    override fun copy(deviceID: Int, state: DeviceState, name: String, type: String): Device {
+    override fun copy(
+        deviceID: Int,
+        state: DeviceState,
+        name: String,
+        type: String
+    ): SingleUnit {
         return SingleUnit(deviceID, state, name, type)
     }
 }
@@ -42,8 +47,24 @@ class MultiUnit(
     name: String = "",
     type: String = ""
 ) : Device(deviceID, state, name, type) {
-    override fun copy(deviceID: Int, state: DeviceState, name: String, type: String): Device {
+    override fun copy(
+        deviceID: Int,
+        state: DeviceState,
+        name: String,
+        type: String
+    ): MultiUnit {
         return MultiUnit(deviceID, size, subUnits.toMutableList(), state, name, type)
+    }
+
+    fun copy(
+        deviceID: Int = this.deviceID,
+        size: Int = this.size,
+        subUnits: MutableList<Device> = this.subUnits.toMutableList(),
+        state: DeviceState = this.state,
+        name: String = this.name,
+        type: String = this.type
+    ): MultiUnit {
+        return MultiUnit(deviceID, size, subUnits, state, name, type)
     }
 }
 
@@ -54,7 +75,22 @@ class SafetyCritical(
     name: String = "",
     type: String = ""
 ) : Device(deviceID, state, name, type) {
-    override fun copy(deviceID: Int, state: DeviceState, name: String, type: String): Device {
+    override fun copy(
+        deviceID: Int,
+        state: DeviceState,
+        name: String,
+        type: String
+    ): SafetyCritical {
+        return SafetyCritical(deviceID, maxOnDuration, state, name, type)
+    }
+
+    fun copy(
+        deviceID: Int = this.deviceID,
+        maxOnDuration: Long = this.maxOnDuration,
+        state: DeviceState = this.state,
+        name: String = this.name,
+        type: String = this.type
+    ): SafetyCritical {
         return SafetyCritical(deviceID, maxOnDuration, state, name, type)
     }
 }

@@ -9,11 +9,11 @@ class DeviceState(Enum):
 
 
 class Device:
-    def __init__(self, deviceID):
+    def __init__(self, deviceID, name, deviceType=""):
         self.deviceID = deviceID
         self.state = DeviceState.OFF
-        self.name = ""
-        self.type = ""
+        self.name = name
+        self.type = deviceType
 
     def toggle(self):
         if self.state == DeviceState.OFF:
@@ -23,26 +23,25 @@ class Device:
 
 
 class SingleUnit(Device):
-    def __init__(self, deviceID):
-        super().__init__(deviceID)
-        self.type = "SingleUnit"
+    def __init__(self, deviceID, name):
+        super().__init__(deviceID, name, "SingleUnit")
 
 
 class MultiUnit(Device):
-    def __init__(self, deviceID, size):
-        super().__init__(deviceID)
-        self.type = "MultiUnit"
+    def __init__(self, deviceID, name, size, subUnits=[]):
+        super().__init__(deviceID, name, "MultiUnit")
         self.size = size
-        self.subUnits = []
+        self.subUnits = subUnits
 
     def toggleAll(self):
         for unit in self.subUnits:
             unit.toggle()
 
+    def addSubUnit(self, deviceObj):
+        self.subUnits.append(deviceObj)
+
 
 class SafetyCritical(Device):
-    def __init__(self, deviceID, maxOnDuration):
-        super().__init__(deviceID)
-        self.type = "SafetyCritical"
-
+    def __init__(self, deviceID, name, maxOnDuration):
+        super().__init__(deviceID, name, "SafetyCritical")
         self.maxOnDuration = maxOnDuration
