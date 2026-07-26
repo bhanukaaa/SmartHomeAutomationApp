@@ -45,3 +45,11 @@ class SafetyCritical(Device):
     def __init__(self, deviceID, name, maxOnDuration):
         super().__init__(deviceID, name, "SafetyCritical")
         self.maxOnDuration = maxOnDuration
+
+
+class Room:
+    def __init__(self, roomId, name, floorName="G", devices=None):
+        self.roomId = roomId
+        self.name = name
+        self.floorName = floorName
+        self.devices = devices if devices is not None else []

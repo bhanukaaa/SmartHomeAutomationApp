@@ -1,10 +1,11 @@
 :root {
   --bg: #0f172a;
   --card-bg: #1e293b;
+  --card-nested: #0f172a;
   --text: #f8fafc;
   --text-muted: #64748b;
   --border: #334155;
-  
+
   /* Device States */
   --state-on: #22c55e;
   --state-off: #94a3b8;
@@ -29,7 +30,7 @@ body {
 
 .container {
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
 }
 
 header {
@@ -55,18 +56,60 @@ h1 {
   color: var(--text-muted);
 }
 
+/* Floor Structure */
+.floors-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.floor-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+/* Room Card */
+.room-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.room-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
 .device-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
+.empty-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* Device Cards */
 .device-card {
-  background-color: var(--card-bg);
+  background-color: var(--card-nested);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.85rem 1rem;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
 }
@@ -77,7 +120,13 @@ h1 {
   gap: 2px;
 }
 
-.device-id {
+.device-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-name {
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -85,8 +134,20 @@ h1 {
 .device-meta {
   font-size: 0.75rem;
   color: var(--text-muted);
+  display: flex;
+  gap: 8px;
 }
 
+.extra-info {
+  color: var(--text-muted);
+}
+
+.extra-info::before {
+  content: "•";
+  margin-right: 8px;
+}
+
+/* Status Pill */
 .status-pill {
   display: flex;
   align-items: center;
@@ -117,16 +178,21 @@ h1 {
 .status-disconnected { color: var(--state-disconnected); }
 .status-disconnected .dot { background-color: var(--state-disconnected); }
 
+/* Nested Sub-units */
 .sub-units {
-  margin-top: 10px;
-  padding-left: 20px;
-  border-left: 2px solid #333;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .sub-units .device-card {
-  background-color: rgba(255, 255, 255, 0.05);
-  margin-bottom: 0;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.sub-units:empty {
+  display: none;
 }

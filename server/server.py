@@ -17,7 +17,8 @@ def main():
         subscriptions=[
             "newDevice/user",
             "datasync/request",
-            "deviceAction/user"
+            "deviceAction/user",
+            "newRoom/user"
         ]
     )
     mqttInterface.start()

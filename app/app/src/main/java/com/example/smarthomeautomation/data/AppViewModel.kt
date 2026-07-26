@@ -31,6 +31,12 @@ class AppViewModel : ViewModel() {
             }
         }
 
+        MqttProvider.manager.subscribe("newRoom/server") { topic, jsonData ->
+            viewModelScope.launch(Dispatchers.Default) {
+                newRoomCallback(jsonData)
+            }
+        }
+
         MqttProvider.manager.subscribe("statusUpdate") { topic, jsonData ->
             viewModelScope.launch(Dispatchers.Default) {
                 statusUpdateCallback(jsonData)
@@ -39,6 +45,25 @@ class AppViewModel : ViewModel() {
 
         MqttProvider.manager.onConnected {
             sync()
+        }
+    }
+
+    fun selectFloor(floorName: String) {
+        _uiState.update { currState ->
+            currState.copy(
+                currentFloorName = floorName,
+                currentRoomId = null
+            )
+        }
+    }
+
+    fun selectRoom(roomId: Int?) {
+        _uiState.update { currState ->
+            val selectedRoom = currState.rooms.find { it.roomId == roomId }
+            currState.copy(
+                currentRoomId = roomId,
+                currentFloorName = selectedRoom?.floorName ?: currState.currentFloorName
+            )
         }
     }
 
@@ -57,18 +82,28 @@ class AppViewModel : ViewModel() {
     }
 
     fun addDeviceHandler(device: Device) {
+        val targetRoomId = _uiState.value.currentRoomId ?: return
         val newDevice = assignTempIDs(device)
 
         _uiState.update { currState ->
-            currState.copy(
-                devices = currState.devices + newDevice
-            )
+            val updatedRooms = currState.rooms.map { room ->
+                if (room.roomId == targetRoomId) {
+                    room.copy(devices = room.devices + newDevice)
+                } else room
+            }
+
+            val updatedRegistry = currState.deviceRegistry.toMutableMap().apply {
+                putAll(registerDeviceIds(newDevice, targetRoomId))
+            }
+
+            currState.copy(rooms = updatedRooms, deviceRegistry = updatedRegistry)
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             fun serializeDevice(dev: Device): Map<String, Any> {
                 val map = mutableMapOf<String, Any>(
                     "tempID" to dev.deviceID,
+                    "roomId" to targetRoomId,
                     "name" to dev.name,
                     "type" to dev.type
                 )
@@ -79,6 +114,7 @@ class AppViewModel : ViewModel() {
                         map["size"] = dev.size
                         map["subUnits"] = dev.subUnits.map { serializeDevice(it) }
                     }
+
                     else -> {}
                 }
                 return map
@@ -88,6 +124,39 @@ class AppViewModel : ViewModel() {
 
             MqttProvider.manager.publish(
                 "newDevice/user",
+                payload
+            )
+        }
+    }
+
+    fun addRoomHandler(name: String, floorName: String) {
+        val tempRoomId = Random.nextInt()
+        val finalFloorName = floorName.ifBlank { "G" }
+
+        val newRoom = Room(
+            roomId = tempRoomId,
+            name = name,
+            floorName = finalFloorName,
+            devices = emptyList()
+        )
+
+        _uiState.update { currState ->
+            currState.copy(
+                rooms = currState.rooms + newRoom,
+                currentFloorName = finalFloorName,
+                currentRoomId = tempRoomId
+            )
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val payload = JSONObject().apply {
+                put("tempRoomID", tempRoomId)
+                put("name", name)
+                put("floorName", finalFloorName)
+            }
+
+            MqttProvider.manager.publish(
+                "newRoom/user",
                 payload
             )
         }
@@ -106,27 +175,59 @@ class AppViewModel : ViewModel() {
     }
 
     fun newDeviceCallback(jsonData: JSONObject) {
-        val tempID = jsonData.optInt("tempID", -1)
-        val newDeviceID = jsonData.optInt("deviceID", -1)
-        if (tempID == -1 || newDeviceID == -1) return
-
-        fun updateDeviceID(device: Device): Device {
-            val updatedDevice = if (device.deviceID == tempID) {
-                device.copy(deviceID = newDeviceID)
-            } else device
-
-            return if (updatedDevice is MultiUnit) {
-                val updatedSubUnits =
-                    updatedDevice.subUnits.map { updateDeviceID(it) }.toMutableList()
-                updatedDevice.copy(subUnits = updatedSubUnits)
-            } else {
-                updatedDevice
-            }
-        }
-
         _uiState.update { currState ->
-            val updatedList = currState.devices.map { updateDeviceID(it) }
-            currState.copy(devices = updatedList)
+            val updatedMap = currState.deviceRegistry.toMutableMap()
+
+            fun processDeviceMapping(json: JSONObject) {
+                val tempID = json.optInt("tempID", -1)
+                val newDeviceID = json.optInt("deviceID", -1)
+
+                if (tempID != -1 && newDeviceID != -1) {
+                    val targetRoomId = currState.deviceRegistry[tempID]
+                    if (targetRoomId != null) {
+                        updatedMap.remove(tempID)
+                        updatedMap[newDeviceID] = targetRoomId
+                    }
+                }
+
+                val subUnitsArray = json.optJSONArray("subUnits") ?: JSONArray()
+                for (i in 0 until subUnitsArray.length()) {
+                    processDeviceMapping(subUnitsArray.getJSONObject(i))
+                }
+            }
+
+            fun updateDeviceID(device: Device, json: JSONObject): Device {
+                val jsonTempID = json.optInt("tempID", -1)
+                val jsonDeviceID = json.optInt("deviceID", -1)
+
+                val updatedDevice = if (device.deviceID == jsonTempID && jsonDeviceID != -1) {
+                    device.copy(deviceID = jsonDeviceID)
+                } else device
+
+                return if (updatedDevice is MultiUnit) {
+                    val subUnitsArray = json.optJSONArray("subUnits") ?: JSONArray()
+                    val updatedSubUnits = updatedDevice.subUnits.mapIndexed { index, subDevice ->
+                        val subJson =
+                            if (index < subUnitsArray.length()) subUnitsArray.getJSONObject(index) else JSONObject()
+                        updateDeviceID(subDevice, subJson)
+                    }.toMutableList()
+                    updatedDevice.copy(subUnits = updatedSubUnits)
+                } else {
+                    updatedDevice
+                }
+            }
+
+            processDeviceMapping(jsonData)
+
+            val topTempID = jsonData.optInt("tempID", -1)
+            val targetRoomId = currState.deviceRegistry[topTempID] ?: return@update currState
+
+            val updatedRooms = currState.rooms.map { room ->
+                if (room.roomId != targetRoomId) room
+                else room.copy(devices = room.devices.map { updateDeviceID(it, jsonData) })
+            }
+
+            currState.copy(rooms = updatedRooms, deviceRegistry = updatedMap)
         }
     }
 
@@ -167,47 +268,115 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    private fun registerDeviceIds(device: Device, roomId: Int): Map<Int, Int> {
+        val map = mutableMapOf<Int, Int>()
+        map[device.deviceID] = roomId
+        if (device is MultiUnit) {
+            device.subUnits.forEach { sub ->
+                map.putAll(registerDeviceIds(sub, roomId))
+            }
+        }
+        return map
+    }
+
     fun dataSyncCallback(jsonData: JSONObject) {
         val requesterID = jsonData.getInt("requesterID")
         if (requesterID == sessionID) {
             _uiState.update { currState ->
-                val deviceList = mutableListOf<Device>()
-                val syncList = jsonData.getJSONArray("devices")
-                for (i in 0 until syncList.length()) {
-                    val syncDevice = syncList.getJSONObject(i)
-                    deviceList.add(parseDevice(syncDevice))
+                val roomList = mutableListOf<Room>()
+                val registry = mutableMapOf<Int, Int>()
+
+                val syncRooms = jsonData.optJSONArray("rooms") ?: JSONArray()
+                for (i in 0 until syncRooms.length()) {
+                    val roomJson = syncRooms.getJSONObject(i)
+                    val roomId = roomJson.getInt("roomId")
+                    val name = roomJson.optString("name", "")
+                    val floorName = roomJson.optString("floorName", "G")
+
+                    val devicesArray = roomJson.optJSONArray("devices") ?: JSONArray()
+                    val deviceList = mutableListOf<Device>()
+
+                    for (j in 0 until devicesArray.length()) {
+                        val parsedDevice = parseDevice(devicesArray.getJSONObject(j))
+                        deviceList.add(parsedDevice)
+                        registry.putAll(registerDeviceIds(parsedDevice, roomId))
+                    }
+
+                    roomList.add(Room(roomId, name, floorName, deviceList))
                 }
 
+                val initialFloorName = roomList.firstOrNull()?.floorName ?: "G"
+                val initialRoomId = roomList.firstOrNull()?.roomId
+
                 currState.copy(
-                    devices = deviceList
+                    rooms = roomList,
+                    deviceRegistry = registry,
+                    currentFloorName = initialFloorName,
+                    currentRoomId = initialRoomId
                 )
             }
             MqttProvider.manager.unsubscribe("datasync/response")
         }
     }
 
+    fun newRoomCallback(jsonData: JSONObject) {
+        val tempRoomID = jsonData.optInt("tempRoomID", -1)
+        val roomObj = jsonData.optJSONObject("room") ?: return
+        val newRoomID = roomObj.optInt("roomId", -1)
+
+        if (tempRoomID == -1 || newRoomID == -1) return
+
+        _uiState.update { currState ->
+            val updatedRooms = currState.rooms.map { room ->
+                if (room.roomId == tempRoomID) {
+                    room.copy(roomId = newRoomID)
+                } else room
+            }
+
+            val updatedRegistry = currState.deviceRegistry.mapValues { (_, roomId) ->
+                if (roomId == tempRoomID) newRoomID else roomId
+            }
+
+            val updatedCurrentRoomId = if (currState.currentRoomId == tempRoomID) {
+                newRoomID
+            } else currState.currentRoomId
+
+            currState.copy(
+                rooms = updatedRooms,
+                deviceRegistry = updatedRegistry,
+                currentRoomId = updatedCurrentRoomId
+            )
+        }
+    }
+
     fun statusUpdateCallback(jsonData: JSONObject) {
         val deviceID = jsonData.getInt("deviceID")
 
-        fun updateDeviceState(device: Device): Device {
-            val updatedDevice = if (device.deviceID == deviceID) {
-                device.copy(
-                    state = DeviceState.valueOf(jsonData.getString("state"))
-                )
-            } else device
-
-            return if (updatedDevice is MultiUnit) {
-                val updatedSubUnits =
-                    updatedDevice.subUnits.map { updateDeviceState(it) }.toMutableList()
-                updatedDevice.copy(subUnits = updatedSubUnits)
-            } else {
-                updatedDevice
-            }
-        }
-
         _uiState.update { currState ->
-            val updatedList = currState.devices.map { updateDeviceState(it) }
-            currState.copy(devices = updatedList)
+            val targetRoomId = currState.deviceRegistry[deviceID] ?: return@update currState
+
+            fun updateDeviceState(device: Device): Device {
+                val updatedDevice = if (device.deviceID == deviceID) {
+                    device.copy(
+                        state = DeviceState.valueOf(jsonData.getString("state"))
+                    )
+                } else device
+
+                return if (updatedDevice is MultiUnit) {
+                    val updatedSubUnits =
+                        updatedDevice.subUnits.map { updateDeviceState(it) }.toMutableList()
+                    updatedDevice.copy(subUnits = updatedSubUnits)
+                } else {
+                    updatedDevice
+                }
+            }
+
+            val updatedRooms = currState.rooms.map { room ->
+                if (room.roomId != targetRoomId) room
+                else room.copy(devices = room.devices.map { updateDeviceState(it) })
+            }
+
+            currState.copy(rooms = updatedRooms)
         }
     }
 

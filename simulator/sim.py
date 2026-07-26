@@ -12,6 +12,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 mqttInterface = None
 deviceManager = None
 
+
 class DeviceState(Enum):
     ON = 1
     OFF = 2
@@ -77,9 +78,25 @@ class SafetyCritical(Device):
         return data
 
 
+class Room:
+    def __init__(self, roomId, name, floorName="G", devices=None):
+        self.roomId = roomId
+        self.name = name
+        self.floorName = floorName
+        self.devices = devices if devices is not None else []
+
+    def toDict(self):
+        return {
+            "roomId": self.roomId,
+            "name": self.name,
+            "floorName": self.floorName,
+            "devices": [d.toDict() for d in self.devices]
+        }
+
+
 class DeviceManager:
     def __init__(self, mqttInterface: "MQTTInterface"):
-        self.devices = []
+        self.rooms = []
         self.mqttInterface = mqttInterface
 
     def parseDeviceData(self, jsonData):
@@ -107,16 +124,45 @@ class DeviceManager:
 
         return dev
 
+    def parseRoomData(self, jsonData):
+        roomId = jsonData.get("roomId")
+        name = jsonData.get("name", "")
+        floorName = jsonData.get("floorName", "G")
+        devicesData = jsonData.get("devices", [])
+
+        devices = [self.parseDeviceData(d) for d in devicesData]
+        return Room(roomId, name, floorName, devices)
+
+    def addNewRoom(self, jsonData):
+        roomData = jsonData.get("room", {})
+        newRoom = self.parseRoomData(roomData)
+        self.rooms.append(newRoom)
+        socketio.emit('room_added', newRoom.toDict())
+
     def addNewDevice(self, jsonData):
+        targetRoomId = jsonData.get("roomId")
         newDevice = self.parseDeviceData(jsonData)
-        self.devices.append(newDevice)
-        socketio.emit('device_added', newDevice.toDict())
+
+        targetRoom = next((r for r in self.rooms if r.roomId == targetRoomId), None)
+        if targetRoom:
+            targetRoom.devices.append(newDevice)
+
+        socketio.emit('device_added', {
+            "roomId": targetRoomId,
+            "device": newDevice.toDict()
+        })
 
     def handleDatasyncResponse(self, jsonData):
-        devicesData = jsonData.get("devices", [])
-        self.devices = [self.parseDeviceData(d) for d in devicesData]
-        deviceList = [d.toDict() for d in self.devices]
-        socketio.emit('initial_devices', deviceList)
+        roomsData = jsonData.get("rooms", [])
+        self.rooms = [self.parseRoomData(r) for r in roomsData]
+        roomList = [r.toDict() for r in self.rooms]
+        socketio.emit('initial_rooms', roomList)
+
+    def getAllDevices(self):
+        devices = []
+        for room in self.rooms:
+            devices.extend(room.devices)
+        return devices
 
     def findAndSetState(self, devices, deviceID, newStateStr):
         for dev in devices:
@@ -138,7 +184,8 @@ class DeviceManager:
 
         if status and status.lower() == "success":
             if action == "toggle":
-                updatedDevice = self.findAndSetState(self.devices, deviceID, newStateStr)
+                allDevices = self.getAllDevices()
+                updatedDevice = self.findAndSetState(allDevices, deviceID, newStateStr)
                 if updatedDevice:
                     socketio.emit('device_updated', updatedDevice.toDict())
 
@@ -164,7 +211,7 @@ class MQTTInterface:
         if reasonCode == 0:
             for topic in self.subscriptions:
                 self.client.subscribe(topic)
-            
+
             payload = {"requesterID": "simulator"}
             self.client.publish("datasync/request", json.dumps(payload))
 
@@ -177,6 +224,8 @@ class MQTTInterface:
                     self.deviceManager.handleActionResponse(jsonData)
                 case "newDevice/server":
                     self.deviceManager.addNewDevice(jsonData)
+                case "newRoom/server":
+                    self.deviceManager.addNewRoom(jsonData)
                 case "datasync/response":
                     self.deviceManager.handleDatasyncResponse(jsonData)
                 case _:
@@ -199,8 +248,8 @@ def index():
 @socketio.on('connect')
 def handleConnect():
     if deviceManager:
-        deviceList = [d.toDict() for d in deviceManager.devices]
-        emit('initial_devices', deviceList)
+        roomList = [r.toDict() for r in deviceManager.rooms]
+        emit('initial_rooms', roomList)
 
 
 def startMqtt():
@@ -213,7 +262,8 @@ def startMqtt():
         subscriptions=[
             "datasync/response",
             "statusUpdate",
-            "newDevice/server"
+            "newDevice/server",
+            "newRoom/server"
         ]
     )
     deviceManager = DeviceManager(mqttInterface)
