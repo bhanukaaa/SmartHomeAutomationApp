@@ -1,0 +1,5 @@
+- floor plan layouts
+- light bulbs special class?
+- scheduling / routines
+- security cams
+- reporting usage data
