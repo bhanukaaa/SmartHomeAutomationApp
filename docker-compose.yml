@@ -6,9 +6,15 @@ services:
     ports:
       - "5000:5000"
     restart: always
+    volumes:
+      - sqlite:/data
 
   simulator:
     build: ./simulator
     ports:
       - "5001:5000"
     restart: always
+
+
+volumes:
+  sqlite:
