@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b930d7d1-2984-44ed-9378-2a1eda1ee8fa" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/app/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddDevicePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddDevicePage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddRoomPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddRoomPage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceCard.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceCard.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceList.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/HomePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/HomePage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/RoomPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/RoomPage.kt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;history&quot;: [
+    {
+      &quot;state&quot;: &quot;OPEN&quot;,
+      &quot;assignee&quot;: &quot;KK14K&quot;,
+      &quot;author&quot;: &quot;bhanukaaa&quot;
+    }
+  ],
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;KK14K&quot;,
+    &quot;author&quot;: &quot;bhanukaaa&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/bhanukaaa/AndroidMQTT.git&quot;,
+    &quot;accountId&quot;: &quot;765106e0-56b9-481c-8270-4eb74e4a533d&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3GwBhxKCnR4awo7xU3Gn1urxvSw" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b930d7d1-2984-44ed-9378-2a1eda1ee8fa" name="Changes" comment="" />
+      <created>1784872874433</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1784872874433</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="47f7f16c-4c3f-45c1-8b09-cf8beaac2f36" value="TOOL_WINDOW" />
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="47f7f16c-4c3f-45c1-8b09-cf8beaac2f36">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

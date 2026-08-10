@@ -1,6 +1,8 @@
 package com.example.smarthomeautomation.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,12 +27,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
-
-
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,66 +45,89 @@ fun RoomPage(
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val hazeState = remember { HazeState() }
 
     val currentRoom = remember(uiState.rooms, uiState.currentRoomID) {
         uiState.rooms.find { it.roomID == uiState.currentRoomID }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddDeviceButtonClick,
-                content = { Icon(Icons.Default.Add, contentDescription = "Add Device") },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        },
-        floatingActionButtonPosition = FabPosition.End
-    ) { innerPadding ->
-        Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Deep Sophisticated Background for Glassmorphism
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            val devices = currentRoom?.devices ?: emptyList()
-
-            if (devices.isEmpty()) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text(
-                        text = "No Devices in this Room",
-                        modifier = Modifier.padding(16.dp),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF388E9C),
+                            Color(0xFF6F7F8C),
+                            Color(0xFFAC6B53)
+                        ),
+                        start = Offset.Infinite,
+                        end = Offset.Zero
                     )
+                )
+                .haze(state = hazeState)
+        )
 
-                    Spacer(Modifier.height(16.dp))
+        Scaffold(
+            containerColor = Color.Transparent,
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onAddDeviceButtonClick,
+                    content = { Icon(Icons.Default.Add, contentDescription = "Add Device") },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            },
+            floatingActionButtonPosition = FabPosition.End
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                val devices = currentRoom?.devices ?: emptyList()
 
-                    Button(onClick = onAddDeviceButtonClick) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.size(4.dp))
-                        Text("Add Device")
+                if (devices.isEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            text = "No Devices in this Room",
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center,
+                            color = Color.White.copy(alpha = 0.6f)
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Button(onClick = onAddDeviceButtonClick) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.size(4.dp))
+                            Text("Add Device")
+                        }
                     }
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = currentRoom?.name + " Devices",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = (currentRoom?.name ?: "Room") + " Devices",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
 
-                DeviceList(viewModel, devices)
+                    DeviceList(viewModel, devices, hazeState)
+                }
             }
         }
     }
