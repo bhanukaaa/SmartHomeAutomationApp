@@ -22,13 +22,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -67,7 +68,8 @@ fun HomePage(
     val pagerState = rememberPagerState(initialPage = 0) { floors.size }
 
     LaunchedEffect(uiState.currentFloorName, floors) {
-        val targetIndex = floors.indexOfFirst { it.equals(uiState.currentFloorName, ignoreCase = true) }
+        val targetIndex =
+            floors.indexOfFirst { it.equals(uiState.currentFloorName, ignoreCase = true) }
         if (targetIndex >= 0 && targetIndex != pagerState.currentPage) {
             pagerState.scrollToPage(targetIndex)
         }
@@ -86,21 +88,32 @@ fun HomePage(
 
     val currentFloorName = floors.getOrNull(pagerState.currentPage) ?: "G"
 
-    Scaffold() { innerPadding ->
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {},
+                content = { Icon(Icons.Default.Add, contentDescription = null) },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(floors, key = { it }) { floorName ->
                     FilterChip(
                         selected = floorName.equals(currentFloorName, ignoreCase = true),
                         onClick = {
-                            val targetIndex = floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
+                            val targetIndex =
+                                floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
                             if (targetIndex >= 0) {
                                 viewModel.selectFloor(floorName)
                                 coroutineScope.launch {
@@ -118,7 +131,8 @@ fun HomePage(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 val floorName = floors[page]
-                val roomsOnFloor = uiState.rooms.filter { it.floorName.equals(floorName, ignoreCase = true) }
+                val roomsOnFloor =
+                    uiState.rooms.filter { it.floorName.equals(floorName, ignoreCase = true) }
 
                 if (roomsOnFloor.isEmpty()) {
                     Column(
@@ -137,7 +151,9 @@ fun HomePage(
                 } else {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp),
                         contentPadding = PaddingValues(bottom = 80.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -145,13 +161,12 @@ fun HomePage(
                         item(span = { GridItemSpan(2) }) {
                             Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Rooms",
+                                    text = "Floor $floorName Rooms",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -187,7 +202,6 @@ fun RoomCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)

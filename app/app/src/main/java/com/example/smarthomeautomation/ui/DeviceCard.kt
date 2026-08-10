@@ -5,13 +5,16 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -60,16 +63,16 @@ fun DeviceCard(
     parentOn: Boolean = true
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val isOn = device.state == DeviceState.ON
-    val isInteractive = device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
+    val rawIsOn = device.state == DeviceState.ON
+    val effectiveIsOn = rawIsOn && parentOn
+    val isInteractive =
+        device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
 
-    // Define the gradient
     val onGradient = Brush.linearGradient(
         colors = listOf(Color(0xFF00FF87), Color(0xFF60EFFF))
     )
-    // Background color for non-gradient states
     val cardBgColor = when {
-        isOn && parentOn -> Color.Transparent // Use transparent to let the gradient show through
+        effectiveIsOn -> Color.Transparent
         device.state == DeviceState.ERROR -> Color.Red
         device.state == DeviceState.DISCONNECTED -> Color.Yellow
         else -> Color.Transparent
@@ -94,17 +97,17 @@ fun DeviceCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = cardBgColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = if (!isOn) androidx.compose.foundation.BorderStroke(1.dp, Color.Gray) else null
+        border = if (!effectiveIsOn) BorderStroke(1.dp, Color.Gray) else null
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .then(
-                    if (isOn && parentOn) Modifier.background(onGradient) else Modifier
+                    if (effectiveIsOn) Modifier.background(onGradient) else Modifier
                 )
                 .padding(12.dp)
         ) {
-            // Top Row: Icon and Switch
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -112,21 +115,21 @@ fun DeviceCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = if (isOn && parentOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    color = if (effectiveIsOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.size(36.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = deviceIcon,
                             contentDescription = null,
-                            tint = if (isOn && parentOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (effectiveIsOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
                 Switch(
-                    checked = isOn,
+                    checked = rawIsOn,
                     onCheckedChange = { onToggle(device.deviceID) },
                     enabled = isInteractive,
                     modifier = Modifier.scale(0.8f),
@@ -141,13 +144,12 @@ fun DeviceCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Information Column
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = device.name.ifBlank { "Unnamed" },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (isOn) Color.Black else Color.White,
+                    color = if (effectiveIsOn) Color.Black else Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -159,7 +161,7 @@ fun DeviceCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StateBadge(state = device.state)
+                    StateBadge(state = if (parentOn) device.state else DeviceState.OFF)
 
                     if (device is MultiUnit) {
                         Icon(
@@ -169,15 +171,15 @@ fun DeviceCard(
                             modifier = Modifier.size(16.dp)
                         )
                     }
-                }
 
-                if (device is SafetyCritical) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${device.maxOnDuration}s limit",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (device is SafetyCritical) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${device.maxOnDuration}s limit",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -193,18 +195,41 @@ fun DeviceCard(
                             .padding(top = 12.dp)
                     ) {
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant,
+                            color = if (effectiveIsOn) Color.Black.copy(alpha = 0.2f) else MaterialTheme.colorScheme.outlineVariant,
                             thickness = 1.dp
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        device.subUnits.forEach { subUnit ->
-                            DeviceCard(
-                                device = subUnit,
-                                onToggle = onToggle,
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                parentOn = isOn
-                            )
+                        val chunkedSubUnits = device.subUnits.chunked(2)
+                        chunkedSubUnits.forEach { pair ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Max)
+                                    .padding(vertical = 3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                DeviceCard(
+                                    device = pair[0],
+                                    onToggle = onToggle,
+                                    parentOn = effectiveIsOn,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                )
+                                if (pair.size > 1) {
+                                    DeviceCard(
+                                        device = pair[1],
+                                        onToggle = onToggle,
+                                        parentOn = effectiveIsOn,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
