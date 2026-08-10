@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -40,7 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.Device
 import com.example.smarthomeautomation.data.DeviceState
@@ -59,11 +63,16 @@ fun DeviceCard(
     val isOn = device.state == DeviceState.ON
     val isInteractive = device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
 
+    // Define the gradient
+    val onGradient = Brush.linearGradient(
+        colors = listOf(Color(0xFF00FF87), Color(0xFF60EFFF))
+    )
+    // Background color for non-gradient states
     val cardBgColor = when {
-        isOn && parentOn -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-        device.state == DeviceState.ERROR -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-        device.state == DeviceState.DISCONNECTED -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        else -> MaterialTheme.colorScheme.surface
+        isOn && parentOn -> Color.Transparent // Use transparent to let the gradient show through
+        device.state == DeviceState.ERROR -> Color.Red
+        device.state == DeviceState.DISCONNECTED -> Color.Yellow
+        else -> Color.Transparent
     }
 
     val deviceIcon = when (device) {
@@ -76,80 +85,100 @@ fun DeviceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
             .then(
-                if (device is MultiUnit) Modifier.clickable { isExpanded = !isExpanded } else Modifier
+                if (device is MultiUnit) Modifier.clickable {
+                    isExpanded = !isExpanded
+                } else Modifier
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (!isOn) androidx.compose.foundation.BorderStroke(1.dp, Color.Gray) else null
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (isOn && parentOn) Modifier.background(onGradient) else Modifier
+                )
+                .padding(12.dp)
+        ) {
+            // Top Row: Icon and Switch
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = if (isOn && parentOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = deviceIcon,
                             contentDescription = null,
                             tint = if (isOn && parentOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = device.name.ifBlank { "Unnamed Device" },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        StateBadge(state = device.state)
-
-                        if (device is SafetyCritical) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "${device.maxOnDuration}s max",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                if (device is MultiUnit) {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
-                        contentDescription = "Expand Sub-Units",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
                 }
 
                 Switch(
                     checked = isOn,
                     onCheckedChange = { onToggle(device.deviceID) },
                     enabled = isInteractive,
+                    modifier = Modifier.scale(0.8f),
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary
+                        checkedThumbColor = Color.Green,
+                        checkedTrackColor = Color.DarkGray,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = Color.LightGray
                     )
                 )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Information Column
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = device.name.ifBlank { "Unnamed" },
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isOn) Color.Black else Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    StateBadge(state = device.state)
+
+                    if (device is MultiUnit) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                            contentDescription = "Expand",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                if (device is SafetyCritical) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${device.maxOnDuration}s limit",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             if (device is MultiUnit) {
@@ -173,7 +202,7 @@ fun DeviceCard(
                             DeviceCard(
                                 device = subUnit,
                                 onToggle = onToggle,
-                                modifier = Modifier.padding(vertical = 2.dp),
+                                modifier = Modifier.padding(vertical = 4.dp),
                                 parentOn = isOn
                             )
                         }
@@ -194,15 +223,15 @@ private fun StateBadge(state: DeviceState) {
     }
 
     Surface(
-        shape = RoundedCornerShape(6.dp),
+        shape = RoundedCornerShape(4.dp),
         color = badgeColor
     ) {
         Text(
             text = state.name,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
         )
     }
 }
