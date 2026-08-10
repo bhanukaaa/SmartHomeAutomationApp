@@ -37,6 +37,9 @@ fun AppController(
         composable(route = AppPages.Home.name) {
             HomePage(
                 viewModel = viewModel,
+                onTempButtonClick = {
+                    navController.navigate(AppPages.Routine.name)
+                },
                 onAddRoomButtonClick = {
                     navController.navigate(AppPages.AddRoom.name)
                 },

@@ -1,5 +1,6 @@
 package com.example.smarthomeautomation.data
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smarthomeautomation.MqttProvider
@@ -19,38 +20,36 @@ class AppViewModel : ViewModel() {
     val sessionID = Random.nextInt()
 
     init {
-        MqttProvider.manager.subscribe("datasync/response") { topic, jsonData ->
+        MqttProvider.manager.subscribe("action/server") { topic, jsonData ->
+            viewModelScope.launch(Dispatchers.Default) {
+                routeCallback(jsonData)
+            }
+        }
+
+        MqttProvider.manager.subscribe("sync/response") { topic, jsonData ->
             viewModelScope.launch(Dispatchers.Default) {
                 dataSyncCallback(jsonData)
             }
         }
 
-        MqttProvider.manager.subscribe("newDevice/server") { topic, jsonData ->
-            viewModelScope.launch(Dispatchers.Default) {
-                newDeviceCallback(jsonData)
-            }
-        }
-
-        MqttProvider.manager.subscribe("newRoom/server") { topic, jsonData ->
-            viewModelScope.launch(Dispatchers.Default) {
-                newRoomCallback(jsonData)
-            }
-        }
-
-        MqttProvider.manager.subscribe("newRoutine/server") { topic, jsonData ->
-            viewModelScope.launch(Dispatchers.Default) {
-                newRoutineCallback(jsonData)
-            }
-        }
-
-        MqttProvider.manager.subscribe("statusUpdate") { topic, jsonData ->
-            viewModelScope.launch(Dispatchers.Default) {
-                statusUpdateCallback(jsonData)
-            }
-        }
-
         MqttProvider.manager.onConnected {
             sync()
+        }
+    }
+
+    fun routeCallback(jsonData: JSONObject) {
+        try {
+            val action = jsonData.getString("action")
+            when (action) {
+                "newDevice" -> newDeviceCallback(jsonData)
+                "newRoom" -> newRoomCallback(jsonData)
+                "deviceStatusUpdate" -> statusUpdateCallback(jsonData)
+//                "newRoutine" -> newRoutineCallback(jsonData)
+                else -> throw Exception("Invalid Callback Action")
+            }
+
+        } catch (e: Exception) {
+            Log.d("CALLBACK_EXCEPTION", e.message ?: "")
         }
     }
 
@@ -73,14 +72,14 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun selectRoutine(routineID: Int?) {
-        _uiState.update { currState ->
-            val selectedRoutine = currState.routines.find { it.routineID == routineID }
-            currState.copy(
-                currentRoutineID = routineID
-            )
-        }
-    }
+//    fun selectRoutine(routineID: Int?) {
+//        _uiState.update { currState ->
+//            val selectedRoutine = currState.routines.find { it.routineID == routineID }
+//            currState.copy(
+//                currentRoutineID = routineID
+//            )
+//        }
+//    }
 
     private fun assignTempIDs(device: Device): Device {
         val tempID = Random.nextInt()
@@ -135,10 +134,12 @@ class AppViewModel : ViewModel() {
                 return map
             }
 
-            val payload = JSONObject(serializeDevice(newDevice))
+            val payload = JSONObject(serializeDevice(newDevice)).apply {
+                put("action", "newDevice")
+            }
 
             MqttProvider.manager.publish(
-                "newDevice/user",
+                "action/user",
                 payload
             )
         }
@@ -168,16 +169,17 @@ class AppViewModel : ViewModel() {
                 put("tempRoomID", tempRoomID)
                 put("name", name)
                 put("floorName", finalFloorName)
+                put("action", "newRoom")
             }
 
             MqttProvider.manager.publish(
-                "newRoom/user",
+                "action/user",
                 payload
             )
         }
     }
 
-    fun addRoutineHandler(name: String){
+    fun addRoutineHandler(name: String) {
         val tempRoutineID = Random.nextInt()
 
         val newRoutine = Routine(
@@ -197,10 +199,11 @@ class AppViewModel : ViewModel() {
             val payload = JSONObject().apply {
                 put("tempRoutineID", tempRoutineID)
                 put("name", name)
+                put("action", "newRoutine")
             }
 
             MqttProvider.manager.publish(
-                "newRoutine/user",
+                "action/user",
                 payload
             )
         }
@@ -209,26 +212,26 @@ class AppViewModel : ViewModel() {
     fun toggleDeviceHandler(deviceID: Int) {
         val payload = JSONObject().apply {
             put("deviceID", deviceID)
-            put("action", "toggle")
+            put("action", "toggleDevice")
         }
 
         MqttProvider.manager.publish(
-            "deviceAction/user",
+            "action/user",
             payload
         )
     }
 
-    fun toggleRoutineHandler(routineID: Int) {
-        val payload = JSONObject().apply {
-            put("routineID", routineID)
-            put("action", "toggle")
-        }
-
-        MqttProvider.manager.publish(
-            "routineAction/user",
-            payload
-        )
-    }
+//    fun toggleRoutineHandler(routineID: Int) {
+//        val payload = JSONObject().apply {
+//            put("routineID", routineID)
+//            put("action", "toggleRoutine")
+//        }
+//
+//        MqttProvider.manager.publish(
+//            "action/user",
+//            payload
+//        )
+//    }
 
     fun newDeviceCallback(jsonData: JSONObject) {
         _uiState.update { currState ->
@@ -371,7 +374,7 @@ class AppViewModel : ViewModel() {
                     currentRoomID = initialRoomID
                 )
             }
-            MqttProvider.manager.unsubscribe("datasync/response")
+            MqttProvider.manager.unsubscribe("sync/response")
         }
     }
 
@@ -405,30 +408,31 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun newRoutineCallback(jsonData: JSONObject) {
-        val tempRoutineID = jsonData.optInt("tempRoutineID", -1)
-        val routineObj = jsonData.optJSONObject("routine") ?: return
-        val newRoutineID = routineObj.optInt("routineID", -1)
+//    fun newRoutineCallback(jsonData: JSONObject) {
+//        val tempRoutineID = jsonData.optInt("tempRoutineID", -1)
+//        val routineObj = jsonData.optJSONObject("routine") ?: return
+//        val newRoutineID = routineObj.optInt("routineID", -1)
+//
+//        if (tempRoutineID == -1 || newRoutineID == -1) return
+//
+//        _uiState.update { currState ->
+//            val updatedRoutines = currState.routines.map { routine ->
+//                if (routine.routineID == tempRoutineID) {
+//                    routine.copy(routineID = newRoutineID)
+//                } else routine
+//            }
+//
+//            val updatedCurrentRoutineID = if (currState.currentRoutineID == tempRoutineID) {
+//                newRoutineID
+//            } else currState.currentRoutineID
+//
+//            currState.copy(
+//                routines = updatedRoutines,
+//                currentRoomID = updatedCurrentRoutineID
+//            )
+//        }
+//    }
 
-        if (tempRoutineID == -1 || newRoutineID == -1) return
-
-        _uiState.update { currState ->
-            val updatedRoutines = currState.routines.map { routine ->
-                if (routine.routineID == tempRoutineID) {
-                    routine.copy(routineID = newRoutineID)
-                } else routine
-            }
-
-            val updatedCurrentRoutineID = if (currState.currentRoutineID == tempRoutineID) {
-                newRoutineID
-            } else currState.currentRoutineID
-
-            currState.copy(
-                routines = updatedRoutines,
-                currentRoomID = updatedCurrentRoutineID
-            )
-        }
-    }
     fun statusUpdateCallback(jsonData: JSONObject) {
         val deviceID = jsonData.optInt("deviceID", -1)
         if (deviceID == -1) return
@@ -475,7 +479,7 @@ class AppViewModel : ViewModel() {
             put("requesterID", sessionID)
         }
         MqttProvider.manager.publish(
-            "datasync/request",
+            "sync/request",
             payload
         )
     }

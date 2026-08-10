@@ -27,14 +27,12 @@ class MQTTInterface:
             payload = msg.payload.decode()
             jsonData = json.loads(payload)
             match msg.topic:
-                case "newDevice/user":
-                    self.deviceManager.handleNewDevice(jsonData)
-                case "datasync/request":
-                    self.deviceManager.handleDatasync(jsonData)
-                case "deviceAction/user":
-                    self.deviceManager.handleDeviceAction(jsonData)
-                case "newRoom/user":
-                    self.deviceManager.handleNewRoom(jsonData)
+                case "action/user":
+                    self.deviceManager.routeUserAction(jsonData)
+                case "sync/request":
+                    self.deviceManager.handleSync(jsonData)
+
+
                 case "newRoutine/user":
                     self.deviceManager.handleNewRoutine(jsonData)
                 case "routineUpdate/user":

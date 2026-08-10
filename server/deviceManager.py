@@ -10,6 +10,24 @@ class DeviceManager:
         self.mqttInterface = mqttInterface
         self.repo = DeviceRepository(dbManager)
 
+    def routeUserAction(self, jsonData):
+        action = jsonData["action"]
+        match action:
+            case "newDevice":
+                self.handleNewDevice(jsonData)
+            case "newRoom":
+                self.handleNewRoom(jsonData)
+            case "toggleDevice":
+                self.handleToggleDevice(jsonData)
+            case "newRoutine":
+                # self.handleNewRoutine(jsonData)
+                pass
+            case "toggleRoutine":
+                pass
+            case _:
+                print("INVALID USER ACTION")
+
+
     def saveIncomingDevice(self, jsonData, roomID=None, parentDeviceID=None):
         deviceData = {
             "deviceID": jsonData.get("deviceID"),
@@ -108,10 +126,11 @@ class DeviceManager:
         payload = {
             "tempRoomID": tempRoomID,
             "room": self.serializeRoom(roomRow),
+            "action": "newRoom"
         }
 
         self.mqttInterface.client.publish(
-            "newRoom/server", json.dumps(payload)
+            "action/server", json.dumps(payload)
         )
 
     def handleNewDevice(self, jsonData):
@@ -123,43 +142,46 @@ class DeviceManager:
         payload = self.serializeDevice(newDeviceRow)
         payload["tempID"] = tempID
         payload["roomID"] = targetRoomID
+        payload["action"] = "newDevice"
 
         self.mqttInterface.client.publish(
-            "newDevice/server", json.dumps(payload)
+            "action/server", json.dumps(payload)
         )
 
-    def handleNewRoutine(self, jsonData):
-        tempRoutineID = jsonData.get("tempRoutineID")
-        routineName = jsonData.get("name", "")
-        daysOfWeek = jsonData.get("daysOfWeek", "")
-        startTime = jsonData.get("startTime", "")
-        endTime = jsonData.get("endTime", "NONE")
+    # def handleNewRoutine(self, jsonData):
+    #     tempRoutineID = jsonData.get("tempRoutineID")
+    #     routineName = jsonData.get("name", "")
+    #     daysOfWeek = jsonData.get("daysOfWeek", "")
+    #     startTime = jsonData.get("startTime", "")
+    #     endTime = jsonData.get("endTime", "NONE")
 
-        routineID = self.repo.insertRoutine(routineName, daysOfWeek, startTime, endTime)
-        routineRow = self.repo.fetchRoutineByID(routineID)
+    #     routineID = self.repo.insertRoutine(
+    #         routineName, daysOfWeek, startTime, endTime)
+    #     routineRow = self.repo.fetchRoutineByID(routineID)
 
-        payload = {
-            "tempRoutineID": tempRoutineID,
-            "routine": self.serializeRoutine(routineRow)
-        }
-        self.mqttInterface.client.publish(
-            "newRoutine/server", json.dumps(payload)
-        )
+    #     payload = {
+    #         "action" : "newRoutine",
+    #         "tempRoutineID": tempRoutineID,
+    #         "routine": self.serializeRoutine(routineRow)
+    #     }
+    #     self.mqttInterface.client.publish(
+    #         "action/server", json.dumps(payload)
+    #     )
 
-    def handleRoutineUpdate(self, jsonData):
-        routineID = jsonData.get("routineID")
-        deviceID = jsonData.get("deviceID")
-        targetState = jsonData.get("targetState", "ON")
+    # def handleRoutineUpdate(self, jsonData):
+    #     routineID = jsonData.get("routineID")
+    #     deviceID = jsonData.get("deviceID")
+    #     targetState = jsonData.get("targetState", "ON")
 
-        self.repo.addDeviceToRoutine(routineID, deviceID, targetState)
-        routineRow = self.repo.fetchRoutineByID(routineID)
+    #     self.repo.addDeviceToRoutine(routineID, deviceID, targetState)
+    #     routineRow = self.repo.fetchRoutineByID(routineID)
 
-        payload = self.serializeRoutine(routineRow)
-        self.mqttInterface.client.publish(
-            "routineUpdate/server", json.dumps(payload)
-        )
+    #     payload = self.serializeRoutine(routineRow)
+    #     self.mqttInterface.client.publish(
+    #         "routineUpdate/server", json.dumps(payload)
+    #     )
 
-    def handleDatasync(self, jsonData):
+    def handleSync(self, jsonData):
         requesterID = jsonData["requesterID"]
 
         rooms = self.repo.fetchAllRooms()
@@ -172,30 +194,16 @@ class DeviceManager:
         }
 
         self.mqttInterface.client.publish(
-            "datasync/response", json.dumps(payload)
+            "sync/response", json.dumps(payload)
         )
 
-    def findAndToggle(self, deviceID):
+    def toggleDeviceState(self, deviceID):
         device = self.repo.fetchDevicebyID(deviceID)
         if not device:
             return False
 
         newState = "ON" if device["state"] == "OFF" else "OFF"
-
-        if device["type"] == "SafetyCritical" and newState == "ON":
-            self.repo.updateDeviceState(
-                deviceID, newState, turnOnTime=time.time())
-        else:
-            self.repo.updateDeviceState(deviceID, newState)
-
-        payload = {
-            "deviceID": deviceID,
-            "status": "success",
-            "action": "toggle",
-            "state": newState,
-        }
-        self.mqttInterface.client.publish("statusUpdate", json.dumps(payload))
-        return True
+        return self.setDeviceState(deviceID, newState)
 
     def setDeviceState(self, deviceID, targetState):
         device = self.repo.fetchDevicebyID(deviceID)
@@ -203,36 +211,21 @@ class DeviceManager:
             return False
 
         if device["type"] == "SafetyCritical" and targetState == "ON":
-            self.repo.updateDeviceState(deviceID, targetState, turnOnTime=time.time())
+            self.repo.updateDeviceState(
+                deviceID, targetState, turnOnTime=time.time())
         else:
             self.repo.updateDeviceState(deviceID, targetState)
 
         payload = {
             "deviceID": deviceID,
-            "status": "success",
-            "action": "setState",
+            "action": "deviceStatusUpdate",
             "state": targetState,
         }
-        self.mqttInterface.client.publish("statusUpdate", json.dumps(payload))
+        self.mqttInterface.client.publish("action/server", json.dumps(payload))
         return True
 
-    def handleDeviceAction(self, jsonData):
-        deviceID = jsonData.get("deviceID")
-        action = jsonData.get("action", "")
-
-        found = False
-        if action == "toggle":
-            found = self.findAndToggle(deviceID)
-
-        if not found:
-            payload = {
-                "deviceID": deviceID,
-                "status": "error",
-                "action": action,
-            }
-            self.mqttInterface.client.publish(
-                "statusUpdate", json.dumps(payload)
-            )
+    def handleToggleDevice(self, jsonData):
+        return self.toggleDeviceState(jsonData.get("deviceID"))
 
     def checkSafetyDevices(self):
         now = time.time()
@@ -242,12 +235,12 @@ class DeviceManager:
             turnOnTime = device.get("turnOnTime") or 0
             maxOnDuration = device.get("maxOnDuration") or 0
             if turnOnTime > 0 and (now - turnOnTime) >= maxOnDuration:
-                self.findAndToggle(device["deviceID"])
+                self.setDeviceState(device["deviceID"], "OFF")
 
-    def checkRoutines(self):
-        currentDay = time.strftime("%a").upper()
-        currentTime = time.strftime("%H:%M")
+    # def checkRoutines(self):
+    #     currentDay = time.strftime("%a").upper()
+    #     currentTime = time.strftime("%H:%M")
 
-        activeRoutines = self.repo.fetchActiveRoutines(currentDay, currentTime)
-        for item in activeRoutines:
-            self.setDeviceState(item["deviceID"], item["targetState"])
+    #     activeRoutines = self.repo.fetchActiveRoutines(currentDay, currentTime)
+    #     for item in activeRoutines:
+    #         self.setDeviceState(item["deviceID"], item["targetState"])

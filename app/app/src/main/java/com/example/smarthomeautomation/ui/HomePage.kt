@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomePage(
     viewModel: AppViewModel,
+    onTempButtonClick: () -> Unit,
     onAddRoomButtonClick: () -> Unit,
     onRoomClick: (Int) -> Unit
 ) {
@@ -91,7 +92,7 @@ fun HomePage(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = { onTempButtonClick() },
                 content = { Icon(Icons.Default.Add, contentDescription = null) },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer

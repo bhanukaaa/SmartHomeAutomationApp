@@ -179,15 +179,13 @@ class DeviceManager:
     def handleActionResponse(self, jsonData):
         deviceID = jsonData.get("deviceID")
         action = jsonData.get("action")
-        status = jsonData.get("status")
         newStateStr = jsonData.get("state")
 
-        if status and status.lower() == "success":
-            if action == "toggle":
-                allDevices = self.getAllDevices()
-                updatedDevice = self.findAndSetState(allDevices, deviceID, newStateStr)
-                if updatedDevice:
-                    socketio.emit('device_updated', updatedDevice.toDict())
+        if action == "deviceStatusUpdate":
+            allDevices = self.getAllDevices()
+            updatedDevice = self.findAndSetState(allDevices, deviceID, newStateStr)
+            if updatedDevice:
+                socketio.emit('device_updated', updatedDevice.toDict())
 
 
 class MQTTInterface:
@@ -219,17 +217,18 @@ class MQTTInterface:
         try:
             payload = msg.payload.decode()
             jsonData = json.loads(payload)
-            match msg.topic:
-                case "statusUpdate":
-                    self.deviceManager.handleActionResponse(jsonData)
-                case "newDevice/server":
-                    self.deviceManager.addNewDevice(jsonData)
-                case "newRoom/server":
-                    self.deviceManager.addNewRoom(jsonData)
-                case "datasync/response":
-                    self.deviceManager.handleDatasyncResponse(jsonData)
-                case _:
-                    raise ValueError("Undefined Topic")
+            
+            if msg.topic == "action/server":
+                action = jsonData.get("action")
+                match action:
+                    case "newDevice":
+                        self.deviceManager.addNewDevice(jsonData)
+                    case "newRoom":
+                        self.deviceManager.addNewRoom(jsonData)
+                    case "deviceStatusUpdate":
+                        self.deviceManager.handleActionResponse(jsonData)
+            elif msg.topic == "sync/response":
+                self.deviceManager.handleDatasyncResponse(jsonData)
         except Exception as e:
             print(f"Error processing MQTT message: {e}")
 
@@ -260,10 +259,8 @@ def startMqtt():
         username="hardwareSimulator",
         password="12345678",
         subscriptions=[
-            "datasync/response",
-            "statusUpdate",
-            "newDevice/server",
-            "newRoom/server"
+            "sync/response",
+            "action/server"
         ]
     )
     deviceManager = DeviceManager(mqttInterface)
