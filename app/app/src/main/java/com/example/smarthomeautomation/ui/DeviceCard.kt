@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -84,7 +85,7 @@ fun DeviceCard(
         effectiveIsOn -> Color.Transparent
         device.state == DeviceState.ERROR -> Color.Red.copy(alpha = 0.15f)
         device.state == DeviceState.DISCONNECTED -> Color.Yellow.copy(alpha = 0.1f)
-        else -> Color.Transparent // Changed from Red to Transparent for glass look
+        else -> Color.Transparent
     }
 
     val deviceIcon = when (device) {
@@ -97,20 +98,10 @@ fun DeviceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(
-                width = 0.5.dp,
-                brush = Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(0.2f),
-                        Color.Transparent
-                    )
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
             .then(
                 if (device is MultiUnit) Modifier.clickable { isExpanded = !isExpanded } else Modifier
             ),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -119,14 +110,18 @@ fun DeviceCard(
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(24.dp))
-                // Apply hazeChild HERE inside the card to ensure it's clipped to the rounded corners
-                .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp) ,style = HazeDefaults.style  (
+                .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp), style = HazeDefaults.style(
                     blurRadius = 24.dp,
-                    backgroundColor = Color.Red,
+                    backgroundColor = Color.Transparent,
                     tint = Color.White.copy(alpha = 0.05f)
                 ))
-                .then(
-                    if (effectiveIsOn) Modifier.background(onGradient) else Modifier
+                .background(if (effectiveIsOn) onGradient else SolidColor(cardBgColor))
+                .border(
+                    width = 0.5.dp,
+                    brush = Brush.verticalGradient(
+                        listOf(Color.White.copy(0.2f), Color.Transparent)
+                    ),
+                    shape = RoundedCornerShape(24.dp)
                 )
                 .padding(16.dp)
         ) {

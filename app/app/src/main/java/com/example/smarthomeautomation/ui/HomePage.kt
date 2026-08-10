@@ -51,6 +51,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -112,9 +113,9 @@ fun HomePage(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF0F172A), // Deep Slate
-                            Color(0xFF1E1B4B), // Royal Indigo
-                            Color(0xFF1E1E2C)
+                            Color(0xFFA6767A), // Top-Right: Muted Terracotta Brick
+                            Color(0xFF5D748A)  ,// Bottom-Left: Muted Slate Blue, // Center: Bright Pale Lilac
+                            Color(0xFF5A756C)  // Bottom-Left: Pale Soft Sage
                         ),
                         start = Offset.Infinite,
                         end = Offset.Zero
@@ -129,7 +130,7 @@ fun HomePage(
                 FloatingActionButton(
                     onClick = { onTempButtonClick() },
                     content = { Icon(Icons.Default.Add, contentDescription = null) },
-                    containerColor = Color(0xFF818CF8),
+                    containerColor = Color(0xFFC2185B),
                     contentColor = Color.White
                 )
             },
@@ -260,6 +261,7 @@ fun RoomCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -268,6 +270,7 @@ fun RoomCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
                 .hazeChild(state = hazeState, style = HazeDefaults.style(
                     blurRadius = 24.dp,
                     backgroundColor = Color.Transparent,
