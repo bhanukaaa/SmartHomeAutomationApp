@@ -41,6 +41,23 @@ class DatabaseManager:
                     FOREIGN KEY (roomID) REFERENCES room(roomID) ON DELETE SET NULL,
                     FOREIGN KEY (parentDeviceID) REFERENCES device(deviceID) ON DELETE CASCADE
                 );
+
+                CREATE TABLE IF NOT EXISTS routine (
+                    routineID INTEGER PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    startTime TEXT NOT NULL,
+                    endTime TEXT NOT NULL,
+                    daysOfWeek TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS routineDevice (
+                    routineID INTEGER NOT NULL,
+                    deviceID INTEGER NOT NULL,
+                    targetState TEXT NOT NULL CHECK(targetState IN ('ON', 'OFF')),
+                    PRIMARY KEY (routineID, deviceID),
+                    FOREIGN KEY (routineID) REFERENCES routine(routineID) ON DELETE CASCADE,
+                    FOREIGN KEY (deviceID) REFERENCES device(deviceID) ON DELETE CASCADE
+                );
             """)
             conn.commit()
             conn.close()

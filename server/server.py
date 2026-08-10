@@ -16,7 +16,7 @@ def main():
     dbManager = DatabaseManager(dbPath)
 
     mqttInterface = MQTTInterface(
-        host="04f84ddb10fe41eb88ca98faf3b4b9b0.s1.eu.hivemq.cloud",
+        host="9a09cc62f72a432a9a1dd98297bd3f1d.s1.eu.hivemq.cloud",
         port=8883,
         username="pythonServer",
         password="12345678",
@@ -25,6 +25,7 @@ def main():
             "datasync/request",
             "deviceAction/user",
             "newRoom/user",
+            "manageRoutine/user"
         ],
     )
     mqttInterface.start()

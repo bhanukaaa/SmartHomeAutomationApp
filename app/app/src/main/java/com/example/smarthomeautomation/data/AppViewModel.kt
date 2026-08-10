@@ -430,16 +430,26 @@ class AppViewModel : ViewModel() {
         }
     }
     fun statusUpdateCallback(jsonData: JSONObject) {
-        val deviceID = jsonData.getInt("deviceID")
+        val deviceID = jsonData.optInt("deviceID", -1)
+        if (deviceID == -1) return
 
         _uiState.update { currState ->
             val targetRoomID = currState.deviceRegistry[deviceID] ?: return@update currState
 
             fun updateDeviceState(device: Device): Device {
                 val updatedDevice = if (device.deviceID == deviceID) {
-                    device.copy(
-                        state = DeviceState.valueOf(jsonData.getString("state"))
-                    )
+                    val newStateStr = jsonData.optString("state", "")
+                    if (newStateStr.isNotEmpty()) {
+                        device.copy(
+                            state = try {
+                                DeviceState.valueOf(newStateStr)
+                            } catch (e: Exception) {
+                                device.state
+                            }
+                        )
+                    } else {
+                        device
+                    }
                 } else device
 
                 return if (updatedDevice is MultiUnit) {

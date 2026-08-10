@@ -76,6 +76,23 @@ class DeviceManager:
             ]
         }
 
+    def serializeRoutine(self, routineRow):
+        devices = self.repo.fetchDevicesForRoutine(routineRow["routineID"])
+        return {
+            "routineID": routineRow["routineID"],
+            "name": routineRow["name"],
+            "daysOfWeek": routineRow["daysOfWeek"],
+            "startTime": routineRow["startTime"],
+            "endTime": routineRow["endTime"],
+            "devices": [
+                {
+                    "deviceID": dev["deviceID"],
+                    "targetState": dev["targetState"]
+                }
+                for dev in devices
+            ]
+        }
+
     def handleNewRoom(self, jsonData):
         tempRoomID = jsonData.get("tempRoomID")
         roomName = jsonData.get("name", "")
@@ -111,14 +128,47 @@ class DeviceManager:
             "newDevice/server", json.dumps(payload)
         )
 
+    def handleNewRoutine(self, jsonData):
+        tempRoutineID = jsonData.get("tempRoutineID")
+        routineName = jsonData.get("name", "")
+        daysOfWeek = jsonData.get("daysOfWeek", "")
+        startTime = jsonData.get("startTime", "")
+        endTime = jsonData.get("endTime", "NONE")
+
+        routineID = self.repo.insertRoutine(routineName, daysOfWeek, startTime, endTime)
+        routineRow = self.repo.fetchRoutineByID(routineID)
+
+        payload = {
+            "tempRoutineID": tempRoutineID,
+            "routine": self.serializeRoutine(routineRow)
+        }
+        self.mqttInterface.client.publish(
+            "newRoutine/server", json.dumps(payload)
+        )
+
+    def handleRoutineUpdate(self, jsonData):
+        routineID = jsonData.get("routineID")
+        deviceID = jsonData.get("deviceID")
+        targetState = jsonData.get("targetState", "ON")
+
+        self.repo.addDeviceToRoutine(routineID, deviceID, targetState)
+        routineRow = self.repo.fetchRoutineByID(routineID)
+
+        payload = self.serializeRoutine(routineRow)
+        self.mqttInterface.client.publish(
+            "routineUpdate/server", json.dumps(payload)
+        )
+
     def handleDatasync(self, jsonData):
         requesterID = jsonData["requesterID"]
 
         rooms = self.repo.fetchAllRooms()
+        routines = self.repo.fetchAllRoutines()
 
         payload = {
             "requesterID": requesterID,
             "rooms": [self.serializeRoom(r) for r in rooms],
+            "routines": [self.serializeRoutine(rt) for rt in routines]
         }
 
         self.mqttInterface.client.publish(
@@ -143,6 +193,25 @@ class DeviceManager:
             "status": "success",
             "action": "toggle",
             "state": newState,
+        }
+        self.mqttInterface.client.publish("statusUpdate", json.dumps(payload))
+        return True
+
+    def setDeviceState(self, deviceID, targetState):
+        device = self.repo.fetchDevicebyID(deviceID)
+        if not device or device["state"] == targetState:
+            return False
+
+        if device["type"] == "SafetyCritical" and targetState == "ON":
+            self.repo.updateDeviceState(deviceID, targetState, turnOnTime=time.time())
+        else:
+            self.repo.updateDeviceState(deviceID, targetState)
+
+        payload = {
+            "deviceID": deviceID,
+            "status": "success",
+            "action": "setState",
+            "state": targetState,
         }
         self.mqttInterface.client.publish("statusUpdate", json.dumps(payload))
         return True
@@ -174,3 +243,11 @@ class DeviceManager:
             maxOnDuration = device.get("maxOnDuration") or 0
             if turnOnTime > 0 and (now - turnOnTime) >= maxOnDuration:
                 self.findAndToggle(device["deviceID"])
+
+    def checkRoutines(self):
+        currentDay = time.strftime("%a").upper()
+        currentTime = time.strftime("%H:%M")
+
+        activeRoutines = self.repo.fetchActiveRoutines(currentDay, currentTime)
+        for item in activeRoutines:
+            self.setDeviceState(item["deviceID"], item["targetState"])

@@ -40,15 +40,9 @@ fun AppController(
                 onAddRoomButtonClick = {
                     navController.navigate(AppPages.AddRoom.name)
                 },
-                onAddRoutineButtonClick = {
-                    navController.navigate(AppPages.AddRoutine.name)
-                },
                 onRoomClick = { roomID ->
                     viewModel.selectRoom(roomID)
                     navController.navigate(AppPages.Room.name)
-                },
-                onViewRoutineButtonClick = {
-                    navController.navigate(AppPages.Routine.name)
                 }
             )
         }
