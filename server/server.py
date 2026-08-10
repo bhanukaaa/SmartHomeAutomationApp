@@ -25,6 +25,7 @@ def main():
             "datasync/request",
             "deviceAction/user",
             "newRoom/user",
+            "manageRoutine/user"
         ],
     )
     mqttInterface.start()

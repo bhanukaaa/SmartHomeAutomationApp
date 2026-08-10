@@ -106,3 +106,28 @@ class DeviceRepository:
                 "SELECT * FROM device WHERE type = 'SafetyCritical' AND state = 'ON'"
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def insertRoutine(self, routineName, daysOfWeek, startTime, endTime = "NONE"):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO routine (name, startTime, endTime, daysOfWeek) VALUES (?, ?, ?, ?)",
+                (routineName, startTime, endTime, daysOfWeek)
+            )
+            return cursor.lastrowid
+
+    def addDeviceToRoutine(self, routineID, deviceID, targetState):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO routineDevice (routineID, deviceID, targetState) VALUES (?, ?, ?)",
+                (routineID, deviceID, targetState)
+            )
+
+    def removeDeviceFromRoutine(self, routineID, deviceID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM routineDevice WHERE routineID = ? AND deviceID = ?",
+                (routineID, deviceID)
+            )
