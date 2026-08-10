@@ -122,7 +122,7 @@ fun RoutinePage(
                         RoutineCard(
                             routine = routine,
                             onToggle = { routineID ->
-                                viewModel.toggleRoutineHandler(routineID)
+//                                viewModel.toggleRoutineHandler(routineID)
                             }
                         )
                     }
