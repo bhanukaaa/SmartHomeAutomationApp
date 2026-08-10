@@ -9,7 +9,9 @@ data class Room(
 
 data class AppUIState(
     val rooms: List<Room> = emptyList(),
+    val routines: List<Routine> = emptyList(),
     val deviceRegistry: Map<Int, Int> = emptyMap(),
     val currentFloorName: String = "G",
-    val currentRoomID: Int? = null
+    val currentRoomID: Int? = null,
+    val currentRoutineID: Int? = null
 )

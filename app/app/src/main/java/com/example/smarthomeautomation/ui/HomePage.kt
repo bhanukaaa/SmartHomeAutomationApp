@@ -53,6 +53,8 @@ import kotlinx.coroutines.launch
 fun HomePage(
     viewModel: AppViewModel,
     onAddRoomButtonClick: () -> Unit,
+    onAddRoutineButtonClick: () -> Unit,
+    onViewRoutineButtonClick: () -> Unit,
     onRoomClick: (Int) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -66,7 +68,8 @@ fun HomePage(
     val pagerState = rememberPagerState(initialPage = 0) { floors.size }
 
     LaunchedEffect(uiState.currentFloorName, floors) {
-        val targetIndex = floors.indexOfFirst { it.equals(uiState.currentFloorName, ignoreCase = true) }
+        val targetIndex =
+            floors.indexOfFirst { it.equals(uiState.currentFloorName, ignoreCase = true) }
         if (targetIndex >= 0 && targetIndex != pagerState.currentPage) {
             pagerState.scrollToPage(targetIndex)
         }
@@ -99,7 +102,8 @@ fun HomePage(
                     FilterChip(
                         selected = floorName.equals(currentFloorName, ignoreCase = true),
                         onClick = {
-                            val targetIndex = floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
+                            val targetIndex =
+                                floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
                             if (targetIndex >= 0) {
                                 viewModel.selectFloor(floorName)
                                 coroutineScope.launch {
@@ -117,7 +121,8 @@ fun HomePage(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 val floorName = floors[page]
-                val roomsOnFloor = uiState.rooms.filter { it.floorName.equals(floorName, ignoreCase = true) }
+                val roomsOnFloor =
+                    uiState.rooms.filter { it.floorName.equals(floorName, ignoreCase = true) }
 
                 if (roomsOnFloor.isEmpty()) {
                     Column(
@@ -129,8 +134,18 @@ fun HomePage(
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = onAddRoomButtonClick) {
                             Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.size(8.dp))
+                            Spacer(modifier = Modifier.size(4.dp))
                             Text(text = "Add Room")
+                        }
+                        Button(onClick = onAddRoutineButtonClick) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.size(4.dp))
+                            Text(text = "Add Routine")
+                        }
+                        Button(onClick = onViewRoutineButtonClick) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.size(4.dp))
+                            Text(text = "View Routines")
                         }
                     }
                 } else {
@@ -140,12 +155,9 @@ fun HomePage(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         item {
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "Rooms",
@@ -156,6 +168,16 @@ fun HomePage(
                                     Icon(Icons.Default.Add, contentDescription = null)
                                     Spacer(modifier = Modifier.size(4.dp))
                                     Text("Add Room")
+                                }
+                                OutlinedButton(onClick = onAddRoutineButtonClick) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                    Spacer(modifier = Modifier.size(4.dp))
+                                    Text("Add Routine")
+                                }
+                                OutlinedButton(onClick = onViewRoutineButtonClick) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                    Spacer(modifier = Modifier.size(4.dp))
+                                    Text("View Routine")
                                 }
                             }
                         }

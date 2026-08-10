@@ -1,4 +1,4 @@
-package com.example.smarthomeautomation.ui
+package com.example.smarthomeautomation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -8,12 +8,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.ui.HomePage
+import com.example.smarthomeautomation.ui.RoomPage
+import com.example.smarthomeautomation.ui.AddDevicePage
+import com.example.smarthomeautomation.ui.AddRoomPage
+import com.example.smarthomeautomation.ui.AddRoutinePage
+import com.example.smarthomeautomation.ui.RoutinePage
 
 enum class AppPages {
     Home,
     AddDevice,
     AddRoom,
-    Room
+    AddRoutine,
+    Room,
+    Routine
 }
 
 @Composable
@@ -32,9 +40,15 @@ fun AppController(
                 onAddRoomButtonClick = {
                     navController.navigate(AppPages.AddRoom.name)
                 },
+                onAddRoutineButtonClick = {
+                    navController.navigate(AppPages.AddRoutine.name)
+                },
                 onRoomClick = { roomID ->
                     viewModel.selectRoom(roomID)
                     navController.navigate(AppPages.Room.name)
+                },
+                onViewRoutineButtonClick = {
+                    navController.navigate(AppPages.Routine.name)
                 }
             )
         }
@@ -62,6 +76,27 @@ fun AppController(
             AddRoomPage(
                 viewModel = viewModel,
                 onRoomCreated = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(route = AppPages.AddRoutine.name) {
+            AddRoutinePage(
+                viewModel = viewModel,
+                onRoutineCreated = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(route = AppPages.Routine.name) {
+            RoutinePage(
+                viewModel = viewModel,
+                onAddRoutineButtonClick = {
+                    navController.navigate(AppPages.AddRoutine.name)
+                },
+                onBackClick = {
                     navController.popBackStack()
                 }
             )

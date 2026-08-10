@@ -37,6 +37,12 @@ class AppViewModel : ViewModel() {
             }
         }
 
+        MqttProvider.manager.subscribe("newRoutine/server") { topic, jsonData ->
+            viewModelScope.launch(Dispatchers.Default) {
+                newRoutineCallback(jsonData)
+            }
+        }
+
         MqttProvider.manager.subscribe("statusUpdate") { topic, jsonData ->
             viewModelScope.launch(Dispatchers.Default) {
                 statusUpdateCallback(jsonData)
@@ -63,6 +69,15 @@ class AppViewModel : ViewModel() {
             currState.copy(
                 currentRoomID = roomID,
                 currentFloorName = selectedRoom?.floorName ?: currState.currentFloorName
+            )
+        }
+    }
+
+    fun selectRoutine(routineID: Int?) {
+        _uiState.update { currState ->
+            val selectedRoutine = currState.routines.find { it.routineID == routineID }
+            currState.copy(
+                currentRoutineID = routineID
             )
         }
     }
@@ -162,6 +177,35 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun addRoutineHandler(name: String){
+        val tempRoutineID = Random.nextInt()
+
+        val newRoutine = Routine(
+            routineID = tempRoutineID,
+            name = name,
+//            devices = emptyList()
+        )
+
+        _uiState.update { currState ->
+            currState.copy(
+                routines = currState.routines + newRoutine,
+                currentRoutineID = tempRoutineID
+            )
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val payload = JSONObject().apply {
+                put("tempRoutineID", tempRoutineID)
+                put("name", name)
+            }
+
+            MqttProvider.manager.publish(
+                "newRoutine/user",
+                payload
+            )
+        }
+    }
+
     fun toggleDeviceHandler(deviceID: Int) {
         val payload = JSONObject().apply {
             put("deviceID", deviceID)
@@ -170,6 +214,18 @@ class AppViewModel : ViewModel() {
 
         MqttProvider.manager.publish(
             "deviceAction/user",
+            payload
+        )
+    }
+
+    fun toggleRoutineHandler(routineID: Int) {
+        val payload = JSONObject().apply {
+            put("routineID", routineID)
+            put("action", "toggle")
+        }
+
+        MqttProvider.manager.publish(
+            "routineAction/user",
             payload
         )
     }
@@ -349,6 +405,30 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun newRoutineCallback(jsonData: JSONObject) {
+        val tempRoutineID = jsonData.optInt("tempRoutineID", -1)
+        val routineObj = jsonData.optJSONObject("routine") ?: return
+        val newRoutineID = routineObj.optInt("routineID", -1)
+
+        if (tempRoutineID == -1 || newRoutineID == -1) return
+
+        _uiState.update { currState ->
+            val updatedRoutines = currState.routines.map { routine ->
+                if (routine.routineID == tempRoutineID) {
+                    routine.copy(routineID = newRoutineID)
+                } else routine
+            }
+
+            val updatedCurrentRoutineID = if (currState.currentRoutineID == tempRoutineID) {
+                newRoutineID
+            } else currState.currentRoutineID
+
+            currState.copy(
+                routines = updatedRoutines,
+                currentRoomID = updatedCurrentRoutineID
+            )
+        }
+    }
     fun statusUpdateCallback(jsonData: JSONObject) {
         val deviceID = jsonData.getInt("deviceID")
 
