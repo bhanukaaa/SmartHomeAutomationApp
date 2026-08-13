@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +67,8 @@ fun DeviceCard(
     onToggle: (Int) -> Unit,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
-    parentOn: Boolean = true
+    parentOn: Boolean = true,
+    onBodyClick: (Int) -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val rawIsOn = device.state == DeviceState.ON
@@ -98,9 +100,7 @@ fun DeviceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (device is MultiUnit) Modifier.clickable { isExpanded = !isExpanded } else Modifier
-            ),
+            .clickable(onClick = { onBodyClick(device.deviceID) }, interactionSource = remember { MutableInteractionSource() }, indication = null),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -110,11 +110,15 @@ fun DeviceCard(
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(24.dp))
-                .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp), style = HazeDefaults.style(
-                    blurRadius = 24.dp,
-                    backgroundColor = Color.Transparent,
-                    tint = Color.White.copy(alpha = 0.05f)
-                ))
+                .hazeChild(
+                    state = hazeState,
+                    shape = RoundedCornerShape(24.dp),
+                    style = HazeDefaults.style(
+                        blurRadius = 24.dp,
+                        backgroundColor = Color.Transparent,
+                        tint = Color.White.copy(alpha = 0.05f)
+                    )
+                )
                 .background(if (effectiveIsOn) onGradient else SolidColor(cardBgColor))
                 .border(
                     width = 0.5.dp,
@@ -175,7 +179,13 @@ fun DeviceCard(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (device is MultiUnit) Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                                isExpanded = !isExpanded
+                            } else Modifier
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     StateBadge(state = if (parentOn) device.state else DeviceState.OFF)
