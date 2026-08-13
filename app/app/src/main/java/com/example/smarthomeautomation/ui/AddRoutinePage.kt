@@ -17,12 +17,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.data.Routine
+import com.example.smarthomeautomation.data.DeviceState
+import com.example.smarthomeautomation.data.RoutineState
 
 @Composable
 fun AddRoutinePage(
@@ -32,6 +36,9 @@ fun AddRoutinePage(
     val uiState by viewModel.uiState.collectAsState()
 
     var routineName by remember { mutableStateOf("") }
+    var startTime by remember { mutableStateOf("") }
+    var routineState by remember { mutableStateOf(RoutineState.ENABLED) }
+    var devices by remember { mutableStateOf(emptyList<DeviceState>()) }
 
     val scrollState = rememberScrollState()
 
@@ -62,12 +69,25 @@ fun AddRoutinePage(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    OutlinedTextField(
+                        value = startTime,
+                        onValueChange = { startTime = it },
+                        label = { Text("Start Time") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
             Button(
                 onClick = {
-                    viewModel.addRoutineHandler(routineName)
+                    val newRoutine = Routine(
+                        name = routineName,
+                        startTime = startTime,
+                        routineState = routineState,
+                        devices = emptyMap(),
+                    )
+                    viewModel.addRoutineHandler(newRoutine)
                     onRoutineCreated()
                 },
                 enabled = routineName.isNotBlank(),

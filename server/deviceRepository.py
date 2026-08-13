@@ -127,6 +127,15 @@ class DeviceRepository:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def fetchRoutineByID(self, routineID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM routine WHERE routineID = ?", (routineID,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
     def updateRoutineLastTrigger(self, routineID):
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()

@@ -179,18 +179,12 @@ class AppViewModel : ViewModel() {
         }
     }
 
-    fun addRoutineHandler(name: String) {
+    fun addRoutineHandler(routine: Routine) {
         val tempRoutineID = Random.nextInt()
-
-        val newRoutine = Routine(
-            routineID = tempRoutineID,
-            name = name,
-//            devices = emptyList()
-        )
 
         _uiState.update { currState ->
             currState.copy(
-                routines = currState.routines + newRoutine,
+                routines = currState.routines + routine,
                 currentRoutineID = tempRoutineID
             )
         }
@@ -198,7 +192,11 @@ class AppViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val payload = JSONObject().apply {
                 put("tempRoutineID", tempRoutineID)
-                put("name", name)
+                put("name", routine.name)
+                put("startTime", routine.startTime)
+                put("routineState", routine.routineState.toString())
+                put("numDevices", routine.devices.size)
+//                put("devices", )
                 put("action", "newRoutine")
             }
 

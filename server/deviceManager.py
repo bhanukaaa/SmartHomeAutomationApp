@@ -93,7 +93,7 @@ class DeviceManager:
         }
 
     def serializeRoutine(self, routineRow):
-        devices = self.repo.fetchDevicesForRoutine(routineRow["routineID"])
+        devices = self.repo.fetchRoutineDevices(routineRow["routineID"])
         return {
             "routineID": routineRow["routineID"],
             "name": routineRow["name"],
@@ -155,14 +155,14 @@ class DeviceManager:
         )
         routineRow = self.repo.fetchRoutineByID(routineID)
 
-        for i in range(numDevices):
-            self.repo.addDeviceToRoutine(
-                routineID, deviceIDs[i], targetStates[i])
+        # for i in range(numDevices):
+        #     self.repo.addDeviceToRoutine(
+        #         routineID, deviceIDs[i], targetStates[i])
 
         payload = {
             "action": "newRoutine",
             "tempRoutineID": tempRoutineID,
-            "routine": self.serializeRoutine(routineRow)
+            # "routine": self.serializeRoutine(routineRow)
         }
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)

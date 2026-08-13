@@ -118,14 +118,14 @@ fun RoutinePage(
                         }
                     }
 
-                    items(routines, key = { it.routineID }) { routine ->
-                        RoutineCard(
-                            routine = routine,
-                            onToggle = { routineID ->
-//                                viewModel.toggleRoutineHandler(routineID)
-                            }
-                        )
-                    }
+//                    items(routines, key = { it.routineID }) { routine ->
+//                        RoutineCard(
+//                            routine = routine,
+//                            onToggle = { routineID ->
+////                                viewModel.toggleRoutineHandler(routineID)
+//                            }
+//                        )
+//                    }
                 }
             }
         }
