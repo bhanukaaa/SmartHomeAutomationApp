@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b930d7d1-2984-44ed-9378-2a1eda1ee8fa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddDevicePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddDevicePage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddRoomPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/AddRoomPage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceCard.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceCard.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/DeviceList.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/HomePage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/HomePage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/RoomPage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/app/src/main/java/com/example/smarthomeautomation/ui/RoomPage.kt" afterDir="false" />
-    </list>
+    <list default="true" id="b930d7d1-2984-44ed-9378-2a1eda1ee8fa" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

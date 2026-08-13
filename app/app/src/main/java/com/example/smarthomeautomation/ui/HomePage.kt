@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
@@ -258,37 +259,32 @@ fun RoomCard(
     hazeState: HazeState,
     onClick: () -> Unit
 ) {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .hazeChild(state = hazeState, style = HazeDefaults.style(
-                    blurRadius = 24.dp,
-                    backgroundColor = Color.Transparent,
-                    tint = Color.White.copy(alpha = 0.05f)
-                ))
-                .border(
-                    width = 0.5.dp,
-                    brush = Brush.verticalGradient(
-                        listOf(Color.White.copy(0.2f), Color.Transparent)
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .padding(20.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
+            .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp), style = HazeDefaults.style(
+                blurRadius = 24.dp,
+                backgroundColor = Color.Transparent,
+                tint = Color.White.copy(alpha = 0.05f)
+            ))
+            .background(Color.White.copy(alpha = 0.12f)) // simple background for testing
+            .border(
+                width = 0.5.dp,
+                brush = Brush.verticalGradient(
+                    listOf(Color.White.copy(0.2f), Color.Transparent)
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .clickable { onClick() }
+            .padding(16.dp)
+    )
+
+    {
+        Column(horizontalAlignment = Alignment.Start) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.1f),
+                color = Color.White.copy(alpha = 0.15f),
                 modifier = Modifier.size(44.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
