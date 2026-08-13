@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,11 +56,15 @@ import com.example.smarthomeautomation.data.DeviceState
 import com.example.smarthomeautomation.data.MultiUnit
 import com.example.smarthomeautomation.data.SafetyCritical
 import com.example.smarthomeautomation.data.SingleUnit
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeChild
 
 @Composable
 fun DeviceCard(
     device: Device,
     onToggle: (Int) -> Unit,
+    hazeState: HazeState,
     modifier: Modifier = Modifier,
     parentOn: Boolean = true
 ) {
@@ -69,12 +75,16 @@ fun DeviceCard(
         device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
 
     val onGradient = Brush.linearGradient(
-        colors = listOf(Color(0xFF00FF87), Color(0xFF60EFFF))
+        colors = listOf(
+            Color(0xFF818CF8).copy(alpha = 0.25f), // Soft Indigo
+            Color(0xFF304FFE).copy(alpha = 0.25f)  // Soft Purple
+        )
     )
+
     val cardBgColor = when {
         effectiveIsOn -> Color.Transparent
-        device.state == DeviceState.ERROR -> Color.Red
-        device.state == DeviceState.DISCONNECTED -> Color.Yellow
+        device.state == DeviceState.ERROR -> Color.Red.copy(alpha = 0.15f)
+        device.state == DeviceState.DISCONNECTED -> Color.Yellow.copy(alpha = 0.1f)
         else -> Color.Transparent
     }
 
@@ -88,25 +98,32 @@ fun DeviceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
             .then(
-                if (device is MultiUnit) Modifier.clickable {
-                    isExpanded = !isExpanded
-                } else Modifier
+                if (device is MultiUnit) Modifier.clickable { isExpanded = !isExpanded } else Modifier
             ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = if (!effectiveIsOn) BorderStroke(1.dp, Color.Gray) else null
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .then(
-                    if (effectiveIsOn) Modifier.background(onGradient) else Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp), style = HazeDefaults.style(
+                    blurRadius = 24.dp,
+                    backgroundColor = Color.Transparent,
+                    tint = Color.White.copy(alpha = 0.05f)
+                ))
+                .background(if (effectiveIsOn) onGradient else SolidColor(cardBgColor))
+                .border(
+                    width = 0.5.dp,
+                    brush = Brush.verticalGradient(
+                        listOf(Color.White.copy(0.2f), Color.Transparent)
+                    ),
+                    shape = RoundedCornerShape(24.dp)
                 )
-                .padding(12.dp)
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -134,10 +151,10 @@ fun DeviceCard(
                     enabled = isInteractive,
                     modifier = Modifier.scale(0.8f),
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.Green,
-                        checkedTrackColor = Color.DarkGray,
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color.LightGray
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF10B981), // Mac Green
+                        uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                        uncheckedTrackColor = Color.White.copy(alpha = 0.1f)
                     )
                 )
             }
@@ -147,9 +164,9 @@ fun DeviceCard(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = device.name.ifBlank { "Unnamed" },
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (effectiveIsOn) Color.Black else Color.White,
+                    color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -212,6 +229,7 @@ fun DeviceCard(
                                 DeviceCard(
                                     device = pair[0],
                                     onToggle = onToggle,
+                                    hazeState = hazeState,
                                     parentOn = effectiveIsOn,
                                     modifier = Modifier
                                         .weight(1f)
@@ -221,6 +239,7 @@ fun DeviceCard(
                                     DeviceCard(
                                         device = pair[1],
                                         onToggle = onToggle,
+                                        hazeState = hazeState,
                                         parentOn = effectiveIsOn,
                                         modifier = Modifier
                                             .weight(1f)

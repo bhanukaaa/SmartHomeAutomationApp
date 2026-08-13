@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
 import com.example.smarthomeautomation.data.Device
 import com.example.smarthomeautomation.data.MultiUnit
+import dev.chrisbanes.haze.HazeState
 
 private sealed class DeviceRow {
     data class FullWidth(val device: Device) : DeviceRow()
@@ -48,7 +49,7 @@ private fun prepareDeviceRows(devices: List<Device>): List<DeviceRow> {
 }
 
 @Composable
-fun DeviceList(viewModel: AppViewModel, devices: List<Device>) {
+fun DeviceList(viewModel: AppViewModel, devices: List<Device>, hazeState: HazeState) {
     val rowItems = remember(devices) { prepareDeviceRows(devices) }
 
     LazyColumn(
@@ -66,6 +67,7 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>) {
                         onToggle = { deviceID ->
                             viewModel.toggleDeviceHandler(deviceID)
                         },
+                        hazeState = hazeState,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -82,6 +84,7 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>) {
                             onToggle = { deviceID ->
                                 viewModel.toggleDeviceHandler(deviceID)
                             },
+                            hazeState = hazeState,
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
@@ -92,6 +95,7 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>) {
                                 onToggle = { deviceID ->
                                     viewModel.toggleDeviceHandler(deviceID)
                                 },
+                                hazeState = hazeState,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()

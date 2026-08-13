@@ -65,4 +65,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("com.hivemq:hivemq-mqtt-client:1.3.17")
+    implementation("dev.chrisbanes.haze:haze-jetpack-compose:0.6.1")
 }
