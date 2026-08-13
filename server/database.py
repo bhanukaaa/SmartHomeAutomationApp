@@ -46,8 +46,6 @@ class DatabaseManager:
                     routineID INTEGER PRIMARY KEY,
                     name TEXT NOT NULL,
                     startTime TEXT NOT NULL,
-                    endTime TEXT NOT NULL,
-                    daysOfWeek TEXT NOT NULL
                 );
 
                 CREATE TABLE IF NOT EXISTS routineDevice (

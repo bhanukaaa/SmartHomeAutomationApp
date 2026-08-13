@@ -20,8 +20,7 @@ class DeviceManager:
             case "toggleDevice":
                 self.handleToggleDevice(jsonData)
             case "newRoutine":
-                # self.handleNewRoutine(jsonData)
-                pass
+                self.handleNewRoutine(jsonData)
             case "toggleRoutine":
                 pass
             case _:
@@ -99,16 +98,10 @@ class DeviceManager:
         return {
             "routineID": routineRow["routineID"],
             "name": routineRow["name"],
-            "daysOfWeek": routineRow["daysOfWeek"],
             "startTime": routineRow["startTime"],
-            "endTime": routineRow["endTime"],
-            "devices": [
-                {
-                    "deviceID": dev["deviceID"],
-                    "targetState": dev["targetState"]
-                }
-                for dev in devices
-            ]
+            "numDevices": len(devices),
+            "devices": [d["deviceID"] for d in devices],
+            "targetStates": [d["targetState"] for d in devices]
         }
 
     def handleNewRoom(self, jsonData):
@@ -148,25 +141,29 @@ class DeviceManager:
             "action/server", json.dumps(payload)
         )
 
-    # def handleNewRoutine(self, jsonData):
-    #     tempRoutineID = jsonData.get("tempRoutineID")
-    #     routineName = jsonData.get("name", "")
-    #     daysOfWeek = jsonData.get("daysOfWeek", "")
-    #     startTime = jsonData.get("startTime", "")
-    #     endTime = jsonData.get("endTime", "NONE")
+    def handleNewRoutine(self, jsonData):
+        tempRoutineID = jsonData.get("tempRoutineID")
+        routineName = jsonData.get("name", "")
+        startTime = jsonData.get("startTime", "")
+        numDevices = jsonData.get("numDevices", 0)
+        deviceIDs = jsonData.get("devices", [])
+        targetStates = jsonData.get("targetStates", [])
 
-    #     routineID = self.repo.insertRoutine(
-    #         routineName, daysOfWeek, startTime, endTime)
-    #     routineRow = self.repo.fetchRoutineByID(routineID)
+        routineID = self.repo.insertRoutine(
+            routineName, startTime)
+        routineRow = self.repo.fetchRoutineByID(routineID)
 
-    #     payload = {
-    #         "action" : "newRoutine",
-    #         "tempRoutineID": tempRoutineID,
-    #         "routine": self.serializeRoutine(routineRow)
-    #     }
-    #     self.mqttInterface.client.publish(
-    #         "action/server", json.dumps(payload)
-    #     )
+        for i in range(numDevices):
+            self.repo.addDeviceToRoutine(routineID, deviceIDs[i], targetStates[i])
+
+        payload = {
+            "action" : "newRoutine",
+            "tempRoutineID": tempRoutineID,
+            "routine": self.serializeRoutine(routineRow)
+        }
+        self.mqttInterface.client.publish(
+            "action/server", json.dumps(payload)
+        )
 
     # def handleRoutineUpdate(self, jsonData):
     #     routineID = jsonData.get("routineID")

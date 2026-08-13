@@ -15,6 +15,17 @@ actions = [
     "type" : ...,
 }
 
+{
+    "action" : "newRoutine",
+    "tempRoutineID" : ...,
+    "name" : ...,
+    "startTime" : "14:30",
+
+    "numDevices" : 4,
+    "devices" : [ device IDs ],
+    "targetStates" : [ states ]
+}
+
 
 
 # action/server

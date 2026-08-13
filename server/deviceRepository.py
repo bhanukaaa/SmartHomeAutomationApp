@@ -113,12 +113,12 @@ class DeviceRepository:
             cursor.execute("SELECT * FROM routine")
             return [dict(row) for row in cursor.fetchall()]
 
-    def insertRoutine(self, routineName, daysOfWeek, startTime, endTime = "NONE"):
+    def insertRoutine(self, routineName, startTime):
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO routine (name, startTime, endTime, daysOfWeek) VALUES (?, ?, ?, ?)",
-                (routineName, startTime, endTime, daysOfWeek)
+                "INSERT INTO routine (name, startTime) VALUES (?, ?)",
+                (routineName, startTime)
             )
             return cursor.lastrowid
 
