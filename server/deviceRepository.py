@@ -140,7 +140,7 @@ class DeviceRepository:
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO routine (name, startTime, routineState) VALUES (?, ?, ?)",
-                (routineName, startTime)
+                (routineName, startTime, routineState)
             )
             return cursor.lastrowid
 
