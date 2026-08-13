@@ -26,7 +26,6 @@ class DeviceManager:
             case _:
                 print("INVALID USER ACTION")
 
-
     def saveIncomingDevice(self, jsonData, roomID=None, parentDeviceID=None):
         deviceData = {
             "deviceID": jsonData.get("deviceID"),
@@ -99,7 +98,7 @@ class DeviceManager:
             "routineID": routineRow["routineID"],
             "name": routineRow["name"],
             "startTime": routineRow["startTime"],
-            "routineState" : routineRow["routineState"],
+            "routineState": routineRow["routineState"],
             "numDevices": len(devices),
             "devices": [d["deviceID"] for d in devices],
             "targetStates": [d["targetState"] for d in devices]
@@ -157,10 +156,11 @@ class DeviceManager:
         routineRow = self.repo.fetchRoutineByID(routineID)
 
         for i in range(numDevices):
-            self.repo.addDeviceToRoutine(routineID, deviceIDs[i], targetStates[i])
+            self.repo.addDeviceToRoutine(
+                routineID, deviceIDs[i], targetStates[i])
 
         payload = {
-            "action" : "newRoutine",
+            "action": "newRoutine",
             "tempRoutineID": tempRoutineID,
             "routine": self.serializeRoutine(routineRow)
         }
@@ -244,3 +244,26 @@ class DeviceManager:
     #     activeRoutines = self.repo.fetchActiveRoutines(currentDay, currentTime)
     #     for item in activeRoutines:
     #         self.setDeviceState(item["deviceID"], item["targetState"])
+
+    def triggerRoutine(self, routineID):
+        routineRow = self.repo.fetchRoutineByID(routineID)
+        if not routineRow: return False
+
+        devices = self.repo.fetchRoutineDevices(routineID)
+        for device in devices:
+            self.setDeviceState(device["deviceID"], device["targetState"])
+
+        self.repo.updateRoutineLastTrigger(routineID)
+        return True
+
+    def checkRoutines(self):
+        currentTime = time.strftime("%H:%M")
+        enabledRoutines = self.repo.fetchEnabledRoutines()
+
+        for routine in enabledRoutines:
+            routineStartTime = routine.get("startTime")
+            lastTrigger = routine.get("lastTrigger")
+
+            if routineStartTime and routineStartTime <= currentTime:
+                if not lastTrigger or (time.time() - lastTrigger) > 60:
+                    self.triggerRoutine(routine.get("routineID"))

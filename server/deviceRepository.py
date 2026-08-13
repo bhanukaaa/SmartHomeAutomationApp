@@ -113,6 +113,28 @@ class DeviceRepository:
             cursor.execute("SELECT * FROM routine")
             return [dict(row) for row in cursor.fetchall()]
 
+    def fetchEnabledRoutines(self):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM routine WHERE routineState = 'ENABLED'")
+            return [dict(row) for row in cursor.fetchall()]
+
+    def fetchRoutineDevices(self, routineID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM routineDevice WHERE routineID = ?", (routineID,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def updateRoutineLastTrigger(self, routineID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE routine SET lastTrigger = CURRENT_TIMESTAMP WHERE routineID = ?",
+                (routineID,)
+            )
+
     def insertRoutine(self, routineName, startTime, routineState):
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()
