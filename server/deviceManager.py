@@ -99,6 +99,7 @@ class DeviceManager:
             "routineID": routineRow["routineID"],
             "name": routineRow["name"],
             "startTime": routineRow["startTime"],
+            "routineState" : routineRow["routineState"],
             "numDevices": len(devices),
             "devices": [d["deviceID"] for d in devices],
             "targetStates": [d["targetState"] for d in devices]
@@ -145,12 +146,14 @@ class DeviceManager:
         tempRoutineID = jsonData.get("tempRoutineID")
         routineName = jsonData.get("name", "")
         startTime = jsonData.get("startTime", "")
+        routineState = jsonData.get("routineState", "")
         numDevices = jsonData.get("numDevices", 0)
         deviceIDs = jsonData.get("devices", [])
         targetStates = jsonData.get("targetStates", [])
 
         routineID = self.repo.insertRoutine(
-            routineName, startTime)
+            routineName, startTime, routineState
+        )
         routineRow = self.repo.fetchRoutineByID(routineID)
 
         for i in range(numDevices):

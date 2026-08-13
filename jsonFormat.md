@@ -20,6 +20,7 @@ actions = [
     "tempRoutineID" : ...,
     "name" : ...,
     "startTime" : "14:30",
+    "routineState" : "ENABLED",
 
     "numDevices" : 4,
     "devices" : [ device IDs ],
