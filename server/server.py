@@ -37,7 +37,7 @@ def main():
 def backgroundLoop():
     if deviceManager:
         deviceManager.checkSafetyDevices()
-        deviceManager.checkRoutines()
+        # deviceManager.checkRoutines()
 
     time.sleep(0.5)
 

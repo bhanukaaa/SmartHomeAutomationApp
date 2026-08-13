@@ -23,6 +23,8 @@ class DeviceManager:
                 self.handleNewRoutine(jsonData)
             case "toggleRoutine":
                 pass
+            case "startRoutine":
+                self.handleStartRoutine(jsonData)
             case _:
                 print("INVALID USER ACTION")
 
@@ -155,14 +157,14 @@ class DeviceManager:
         )
         routineRow = self.repo.fetchRoutineByID(routineID)
 
-        # for i in range(numDevices):
-        #     self.repo.addDeviceToRoutine(
-        #         routineID, deviceIDs[i], targetStates[i])
+        for i in range(numDevices):
+            self.repo.addDeviceToRoutine(
+                routineID, deviceIDs[i], targetStates[i])
 
         payload = {
             "action": "newRoutine",
             "tempRoutineID": tempRoutineID,
-            # "routine": self.serializeRoutine(routineRow)
+            "routine": self.serializeRoutine(routineRow)
         }
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)
@@ -245,6 +247,10 @@ class DeviceManager:
     #     for item in activeRoutines:
     #         self.setDeviceState(item["deviceID"], item["targetState"])
 
+    def handleStartRoutine(self, jsonData):
+        routineID = jsonData.get("routineID")
+        self.triggerRoutine(routineID)
+
     def triggerRoutine(self, routineID):
         routineRow = self.repo.fetchRoutineByID(routineID)
         if not routineRow: return False
@@ -264,6 +270,6 @@ class DeviceManager:
             routineStartTime = routine.get("startTime")
             lastTrigger = routine.get("lastTrigger")
 
-            if routineStartTime and routineStartTime <= currentTime:
-                if not lastTrigger or (time.time() - lastTrigger) > 60:
-                    self.triggerRoutine(routine.get("routineID"))
+            # last trigger is a sql timestamp
+            # start time is in HH:MM
+
