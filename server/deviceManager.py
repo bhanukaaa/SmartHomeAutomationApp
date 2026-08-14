@@ -284,12 +284,21 @@ class DeviceManager:
                     routine.routineID, currentDate)
                 self.triggerRoutine(routine.routineID)
 
-    def debugDump(self, jsonData):
-        print("\n\nDEBUG DUMP:")
-        rooms = self.repo.fetchAllRooms()
-        for room in rooms:
-            print(self.serializeRoom(room))
+    # TESTING ONLY =========================================================
 
-        routines = self.repo.fetchAllRoutines()
-        for routine in routines:
-            print(self.serializeRoutine(routine))
+    def testing(self, jsonData):
+        action = jsonData.get("action", "dump")
+
+        if action == "dump":
+            print("\n\nDEBUG DUMP:")
+            rooms = self.repo.fetchAllRooms()
+            for room in rooms:
+                print(self.serializeRoom(room))
+
+            routines = self.repo.fetchAllRoutines()
+            for routine in routines:
+                print(self.serializeRoutine(routine))
+
+        if action == "sql":
+            statement = jsonData.get("stmt", "")
+            print(self.repo.runSQL(statement))

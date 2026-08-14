@@ -215,6 +215,14 @@ class DeviceRepository:
                     targetState = row["targetState"]
                     routine.addDevice(deviceID, targetState)
 
+    # TESTING ONLY =========================================================
+
+    def runSQL(self, statement):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(statement)
+            return [dict(row) for row in cursor.fetchall()]
+
 
 class ActiveSafetyDevice:
     def __init__(self, deviceID, maxOnDuration, turnOnTime):

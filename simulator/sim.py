@@ -211,7 +211,7 @@ class MQTTInterface:
                 self.client.subscribe(topic)
 
             payload = {"requesterID": "simulator"}
-            self.client.publish("datasync/request", json.dumps(payload))
+            self.client.publish("sync/request", json.dumps(payload))
 
     def onMessage(self, client, userdata, msg):
         try:

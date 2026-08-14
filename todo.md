@@ -9,7 +9,7 @@
     "action" : "newRoutine",
     "tempRoutineID" : 43653,
     "name" : "Routine",
-    "startTime" : "17:40",
+    "startTime" : "18:07",
     "routineState" : "ENABLED",
     "numDevices" : 4,
     "deviceIDs": [1, 3, 4, 5],

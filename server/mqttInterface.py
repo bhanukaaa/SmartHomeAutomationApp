@@ -32,7 +32,7 @@ class MQTTInterface:
                 case "sync/request":
                     self.deviceManager.handleSync(jsonData)
                 case "testing":
-                    self.deviceManager.debugDump(jsonData)
+                    self.deviceManager.testing(jsonData)
                 case _:  # default
                     raise ValueError("Undefined Topic")
 
