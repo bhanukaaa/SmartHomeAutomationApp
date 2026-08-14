@@ -1,5 +1,6 @@
 package com.example.smarthomeautomation.ui
 
+import android.icu.util.Calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,8 +24,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +55,12 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
 
     var routineName by remember { mutableStateOf("") }
     var startTime by remember { mutableStateOf("") }
+    val currentTime = Calendar.getInstance()
+    val timePickerState = rememberTimePickerState(
+        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
+        initialMinute = currentTime.get(Calendar.MINUTE),
+        is24Hour = true,
+    )
     var routineState by remember { mutableStateOf(RoutineState.ENABLED) }
     var devices by remember { mutableStateOf(emptyList<DeviceState>()) }
 
@@ -128,15 +138,34 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                OutlinedTextField(
-                    value = startTime,
-                    onValueChange = { startTime = it },
-                    label = { Text("Start Time") },
-                    singleLine = true,
-                    colors = textFieldColors,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                val timePickerColors =
+                    TimePickerDefaults.colors(
+                        timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.2f),
+                        timeSelectorUnselectedContainerColor = Color.White.copy(alpha = 0.08f),
+                        timeSelectorSelectedContentColor = Color.White,
+                        timeSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
+                        periodSelectorSelectedContainerColor = Color.White.copy(alpha = 0.25f),
+                        periodSelectorUnselectedContainerColor = Color.Transparent,
+                        periodSelectorSelectedContentColor = Color.White,
+                        periodSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
+                        periodSelectorBorderColor = Color.White.copy(alpha = 0.3f),
+                    )
+
+                TimeInput(
+                    state = timePickerState,
+                    colors = timePickerColors,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+//                OutlinedTextField(
+//                    value = startTime,
+//                    onValueChange = { startTime = it },
+//                    label = { Text("Start Time") },
+//                    singleLine = true,
+//                    colors = textFieldColors,
+//                    shape = RoundedCornerShape(12.dp),
+//                    modifier = Modifier.fillMaxWidth(),
+//                )
 
                 Button(
                     onClick = {

@@ -21,8 +21,6 @@ class DeviceManager:
                 self.handleToggleDevice(jsonData)
             case "newRoutine":
                 self.handleNewRoutine(jsonData)
-            case "toggleRoutine":
-                pass
             case "startRoutine":
                 self.handleStartRoutine(jsonData)
             case _:
@@ -239,14 +237,6 @@ class DeviceManager:
             if turnOnTime > 0 and (now - turnOnTime) >= maxOnDuration:
                 self.setDeviceState(device["deviceID"], "OFF")
 
-    # def checkRoutines(self):
-    #     currentDay = time.strftime("%a").upper()
-    #     currentTime = time.strftime("%H:%M")
-
-    #     activeRoutines = self.repo.fetchActiveRoutines(currentDay, currentTime)
-    #     for item in activeRoutines:
-    #         self.setDeviceState(item["deviceID"], item["targetState"])
-
     def handleStartRoutine(self, jsonData):
         routineID = jsonData.get("routineID")
         self.triggerRoutine(routineID)
@@ -264,12 +254,11 @@ class DeviceManager:
 
     def checkRoutines(self):
         currentTime = time.strftime("%H:%M")
+        currentDate = time.strftime("%Y-%m-%d")
+
         enabledRoutines = self.repo.fetchEnabledRoutines()
 
         for routine in enabledRoutines:
-            routineStartTime = routine.get("startTime")
-            lastTrigger = routine.get("lastTrigger")
-
-            # last trigger is a sql timestamp
-            # start time is in HH:MM
-
+            if routine.get("startTime") == currentTime and routine.get("lastTriggerDate") != currentDate:
+                self.updateRoutineLastTrigger(routine.get("routineID"))
+                self.triggerRoutine(routine)

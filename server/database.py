@@ -47,7 +47,7 @@ class DatabaseManager:
                     name TEXT NOT NULL,
                     startTime TEXT NOT NULL,
                     routineState TEXT NOT NULL DEFAULT 'ENABLED' CHECK(routineState IN ('ENABLED', 'DISABLED')),
-                    lastTrigger TIMESTAMP
+                    lastTrigger DATE
                 );
 
                 CREATE TABLE IF NOT EXISTS routineDevice (

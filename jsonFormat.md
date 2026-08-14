@@ -4,6 +4,7 @@ actions = [
     newDevice,
     newRoom,
     toggleDevice,
+    newRoutine,
     startRoutine
 ]
 

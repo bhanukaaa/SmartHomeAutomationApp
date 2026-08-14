@@ -140,7 +140,7 @@ class DeviceRepository:
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE routine SET lastTrigger = CURRENT_TIMESTAMP WHERE routineID = ?",
+                "UPDATE routine SET lastTrigger = CURRENT_DATE WHERE routineID = ?",
                 (routineID,)
             )
 

@@ -32,11 +32,6 @@ class MQTTInterface:
                 case "sync/request":
                     self.deviceManager.handleSync(jsonData)
 
-
-                case "newRoutine/user":
-                    self.deviceManager.handleNewRoutine(jsonData)
-                case "routineUpdate/user":
-                    self.deviceManager.handleRoutineUpdate(jsonData)
                 case _:  # default
                     raise ValueError("Undefined Topic")
 
