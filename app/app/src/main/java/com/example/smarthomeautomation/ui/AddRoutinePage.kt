@@ -122,7 +122,7 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     .padding(innerPadding)
                     .padding(16.dp)
                     .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 val textFieldColors =
                     OutlinedTextFieldDefaults.colors(
@@ -179,8 +179,13 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     for (room in rooms) {
                         val devices = room.devices ?: emptyList()
                         for (device in devices) {
-                            DeviceCard(device, {}, hazeState, onBodyClick = {})
-
+                            DeviceCard(
+                                device = device,
+                                onToggle = {},
+                                hazeState = hazeState,
+                                onBodyClick = {},
+                                small = true
+                            )
                         }
                     }
                 }
@@ -192,7 +197,7 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                                 name = routineName,
                                 startTime = startTime,
                                 routineState = routineState,
-                                devices =
+                                devices = emptyMap()
                             )
                         viewModel.addRoutineHandler(newRoutine)
                         onRoutineCreated()

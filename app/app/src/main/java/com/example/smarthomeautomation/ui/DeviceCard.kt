@@ -5,7 +5,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,7 +67,8 @@ fun DeviceCard(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
     parentOn: Boolean = true,
-    onBodyClick: (Int) -> Unit = {}
+    onBodyClick: (Int) -> Unit = {},
+    small: Boolean = false
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val rawIsOn = device.state == DeviceState.ON
@@ -78,8 +78,8 @@ fun DeviceCard(
 
     val onGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFF818CF8).copy(alpha = 0.25f), // Soft Indigo
-            Color(0xFF304FFE).copy(alpha = 0.25f)  // Soft Purple
+            Color(0xFF818CF8).copy(alpha = 0.25f),
+            Color(0xFF304FFE).copy(alpha = 0.25f)
         )
     )
 
@@ -97,11 +97,20 @@ fun DeviceCard(
         else -> Icons.Default.Power
     }
 
+    val shapeRadius = if (small) 16.dp else 24.dp
+    val contentPadding = if (small) 10.dp else 16.dp
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = { onBodyClick(device.deviceID) }, interactionSource = remember { MutableInteractionSource() }, indication = null),
-        shape = RoundedCornerShape(24.dp),
+            .clickable(
+                onClick = {
+                    onBodyClick(device.deviceID)
+                },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ),
+        shape = RoundedCornerShape(shapeRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -109,10 +118,10 @@ fun DeviceCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(shapeRadius))
                 .hazeChild(
                     state = hazeState,
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(shapeRadius),
                     style = HazeDefaults.style(
                         blurRadius = 24.dp,
                         backgroundColor = Color.Transparent,
@@ -125,87 +134,144 @@ fun DeviceCard(
                     brush = Brush.verticalGradient(
                         listOf(Color.White.copy(0.2f), Color.Transparent)
                     ),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(shapeRadius)
                 )
-                .padding(16.dp)
+                .padding(contentPadding)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (effectiveIsOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = deviceIcon,
-                            contentDescription = null,
-                            tint = if (effectiveIsOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = rawIsOn,
-                    onCheckedChange = { onToggle(device.deviceID) },
-                    enabled = isInteractive,
-                    modifier = Modifier.scale(0.8f),
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFF10B981), // Mac Green
-                        uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
-                        uncheckedTrackColor = Color.White.copy(alpha = 0.1f)
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = device.name.ifBlank { "Unnamed" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
+            if (small) {
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(
-                            if (device is MultiUnit) Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                isExpanded = !isExpanded
-                            } else Modifier
-                        ),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StateBadge(state = if (parentOn) device.state else DeviceState.OFF)
-
-                    if (device is MultiUnit) {
-                        Icon(
-                            imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
-                            contentDescription = "Expand",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
+                    Row(
+                        modifier = Modifier
+                            .weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = device.name.ifBlank { "Unnamed" },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
+
+                        if (device is MultiUnit) {
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                                contentDescription = "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .size(16.dp)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { isExpanded = !isExpanded }
+                            )
+                        }
                     }
 
-                    if (device is SafetyCritical) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${device.maxOnDuration}s limit",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Switch(
+                        checked = rawIsOn,
+                        onCheckedChange = { onToggle(device.deviceID) },
+                        enabled = isInteractive,
+                        modifier = Modifier.scale(0.7f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF10B981),
+                            uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                            uncheckedTrackColor = Color.White.copy(alpha = 0.1f)
                         )
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (effectiveIsOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = deviceIcon,
+                                contentDescription = null,
+                                tint = if (effectiveIsOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = rawIsOn,
+                        onCheckedChange = { onToggle(device.deviceID) },
+                        enabled = isInteractive,
+                        modifier = Modifier.scale(0.8f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF10B981),
+                            uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                            uncheckedTrackColor = Color.White.copy(alpha = 0.1f)
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = device.name.ifBlank { "Unnamed" },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (device is MultiUnit) {
+                                    Modifier.clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { isExpanded = !isExpanded }
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        StateBadge(state = if (parentOn) device.state else DeviceState.OFF)
+
+                        if (device is MultiUnit) {
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                                contentDescription = "Expand",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        if (device is SafetyCritical) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${device.maxOnDuration}s limit",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -219,7 +285,7 @@ fun DeviceCard(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp)
+                            .padding(top = if (small) 8.dp else 12.dp)
                     ) {
                         HorizontalDivider(
                             color = if (effectiveIsOn) Color.Black.copy(alpha = 0.2f) else MaterialTheme.colorScheme.outlineVariant,
@@ -241,6 +307,7 @@ fun DeviceCard(
                                     onToggle = onToggle,
                                     hazeState = hazeState,
                                     parentOn = effectiveIsOn,
+                                    small = small,
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight()
@@ -251,6 +318,7 @@ fun DeviceCard(
                                         onToggle = onToggle,
                                         hazeState = hazeState,
                                         parentOn = effectiveIsOn,
+                                        small = small,
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
