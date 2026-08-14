@@ -5,15 +5,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,13 +39,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.data.Device
 import com.example.smarthomeautomation.data.DeviceState
 import com.example.smarthomeautomation.data.Routine
 import com.example.smarthomeautomation.data.RoutineState
@@ -62,7 +69,7 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
         is24Hour = true,
     )
     var routineState by remember { mutableStateOf(RoutineState.ENABLED) }
-    var devices by remember { mutableStateOf(emptyList<DeviceState>()) }
+    var selectedDevices by remember { mutableStateOf(emptyList<Device>()) }
 
     val scrollState = rememberScrollState()
     val hazeState = remember { HazeState() }
@@ -167,6 +174,17 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
 //                    modifier = Modifier.fillMaxWidth(),
 //                )
 
+                Column() {
+                    val rooms = uiState.rooms ?: emptyList()
+                    for (room in rooms) {
+                        val devices = room.devices ?: emptyList()
+                        for (device in devices) {
+                            DeviceCard(device, {}, hazeState, onBodyClick = {})
+
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
                         val newRoutine =
@@ -174,7 +192,7 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                                 name = routineName,
                                 startTime = startTime,
                                 routineState = routineState,
-                                devices = emptyMap(),
+                                devices =
                             )
                         viewModel.addRoutineHandler(newRoutine)
                         onRoutineCreated()
