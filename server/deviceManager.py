@@ -156,12 +156,12 @@ class DeviceManager:
         routineRow = self.repo.fetchRoutineByID(routineID)
 
         for i in range(numDevices):
-            self.repo.addDeviceToRoutine(
-                routineID, deviceIDs[i], targetStates[i])
+            self.repo.addDeviceToRoutine(routineID, deviceIDs[i], targetStates[i])
 
         payload = {
             "action": "newRoutine",
             "tempRoutineID": tempRoutineID,
+            "routineID" : routineID,
             "routine": self.serializeRoutine(routineRow)
         }
         self.mqttInterface.client.publish(
