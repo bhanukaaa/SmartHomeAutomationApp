@@ -31,12 +31,13 @@ class MQTTInterface:
                     self.deviceManager.routeUserAction(jsonData)
                 case "sync/request":
                     self.deviceManager.handleSync(jsonData)
-
+                case "testing":
+                    self.deviceManager.debugDump(jsonData)
                 case _:  # default
                     raise ValueError("Undefined Topic")
 
-        except Exception:
-            print(f"Error: {msg.payload.decode()} on {msg.topic}")
+        except Exception as e:
+            print(f"Error: {msg.payload.decode()} on {msg.topic}", e)
 
     def onConnect(self, client, userdata, flags, reasonCode, properties):
         if reasonCode == 0:

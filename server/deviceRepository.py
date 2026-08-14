@@ -4,6 +4,10 @@ from database import DatabaseManager
 class DeviceRepository:
     def __init__(self, dbManager: DatabaseManager):
         self.dbManager = dbManager
+        self.activeSafetyDevices = {}
+        self.maxOnDurations = {}
+        self.deviceRoutines = {}
+        self.initializeDAOs()
 
     def insertDevice(self, deviceData):
         with self.dbManager.getDBConnection() as conn:
@@ -93,19 +97,35 @@ class DeviceRepository:
                     "UPDATE device SET state = ?, turnOnTime = ? WHERE deviceID = ?",
                     (newState, turnOnTime, deviceID),
                 )
+                if newState == "ON":
+                    self.activateSafetyDevice(deviceID, turnOnTime)
             else:
                 conn.execute(
                     "UPDATE device SET state = ? WHERE deviceID = ?",
                     (newState, deviceID),
                 )
 
+    def activateSafetyDevice(self, deviceID, turnOnTime):
+        if deviceID not in self.maxOnDurations:
+            device = self.fetchDevicebyID(deviceID)
+            self.maxOnDurations[deviceID] = device["maxOnDuration"]
+
+        if deviceID in self.activeSafetyDevices:
+            del self.activeSafetyDevices[deviceID]
+
+        self.activeSafetyDevices[deviceID] = ActiveSafetyDevice(
+            deviceID,
+            self.maxOnDurations[deviceID],
+            turnOnTime
+        )
+
+    def deactivateSafetyDevice(self, deviceID):
+        if deviceID not in self.activeSafetyDevices:
+            return
+        del self.activeSafetyDevices[deviceID]
+
     def fetchActiveSafetyDevices(self):
-        with self.dbManager.getDBConnection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT * FROM device WHERE type = 'SafetyCritical' AND state = 'ON'"
-            )
-            return [dict(row) for row in cursor.fetchall()]
+        return list(self.activeSafetyDevices.values())
 
     def fetchAllRoutines(self):
         with self.dbManager.getDBConnection() as conn:
@@ -114,10 +134,10 @@ class DeviceRepository:
             return [dict(row) for row in cursor.fetchall()]
 
     def fetchEnabledRoutines(self):
-        with self.dbManager.getDBConnection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM routine WHERE routineState = 'ENABLED'")
-            return [dict(row) for row in cursor.fetchall()]
+        return list(self.deviceRoutines.values())
+
+    def fetchEnabledRoutineByID(self, routineID):
+        return self.deviceRoutines.get(routineID, None)
 
     def fetchRoutineDevices(self, routineID):
         with self.dbManager.getDBConnection() as conn:
@@ -136,13 +156,8 @@ class DeviceRepository:
             row = cursor.fetchone()
             return dict(row) if row else None
 
-    def updateRoutineLastTrigger(self, routineID):
-        with self.dbManager.getDBConnection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE routine SET lastTrigger = CURRENT_DATE WHERE routineID = ?",
-                (routineID,)
-            )
+    def updateRoutineLastTrigger(self, routineID, lastTrigger):
+        self.deviceRoutines[routineID].lastTrigger = lastTrigger
 
     def insertRoutine(self, routineName, startTime, routineState):
         with self.dbManager.getDBConnection() as conn:
@@ -151,7 +166,10 @@ class DeviceRepository:
                 "INSERT INTO routine (name, startTime, routineState) VALUES (?, ?, ?)",
                 (routineName, startTime, routineState)
             )
-            return cursor.lastrowid
+            routineID = cursor.lastrowid
+            self.deviceRoutines[routineID] = DeviceRoutine(
+                routineID, startTime)
+            return routineID
 
     def addDeviceToRoutine(self, routineID, deviceID, targetState):
         with self.dbManager.getDBConnection() as conn:
@@ -160,6 +178,7 @@ class DeviceRepository:
                 "INSERT INTO routineDevice (routineID, deviceID, targetState) VALUES (?, ?, ?)",
                 (routineID, deviceID, targetState)
             )
+            self.deviceRoutines[routineID].addDevice(deviceID, targetState)
 
     def removeDeviceFromRoutine(self, routineID, deviceID):
         with self.dbManager.getDBConnection() as conn:
@@ -168,3 +187,56 @@ class DeviceRepository:
                 "DELETE FROM routineDevice WHERE routineID = ? AND deviceID = ?",
                 (routineID, deviceID)
             )
+            self.deviceRoutines[routineID].removeDevice(deviceID)
+
+    def initializeDAOs(self):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM device WHERE maxOnDuration > 0")
+            for row in cursor.fetchall():
+                deviceID = row["deviceID"]
+                maxOnDuration = row["maxOnDuration"]
+                self.maxOnDurations[deviceID] = maxOnDuration
+
+            cursor.execute("SELECT * FROM routine")
+            for row in cursor.fetchall():
+                routineID = row["routineID"]
+                startTime = row["startTime"]
+                self.deviceRoutines[routineID] = DeviceRoutine(
+                    routineID, startTime)
+
+            for routine in self.deviceRoutines.values():
+                routineID = routine.routineID
+                cursor.execute(
+                    "SELECT * FROM routineDevice WHERE routineID = ?", (routineID,)
+                )
+                for row in cursor.fetchall():
+                    deviceID = row["deviceID"]
+                    targetState = row["targetState"]
+                    routine.addDevice(deviceID, targetState)
+
+
+class ActiveSafetyDevice:
+    def __init__(self, deviceID, maxOnDuration, turnOnTime):
+        self.deviceID = deviceID
+        self.maxOnDuration = maxOnDuration
+        self.turnOnTime = turnOnTime
+
+
+class DeviceRoutine:
+    def __init__(self, routineID, startTime):
+        self.routineID = routineID
+        self.startTime = startTime
+        self.lastTrigger = None
+        self.targetDevices = {}
+        # self.enabled = True
+
+    def addDevice(self, deviceID, targetState):
+        self.targetDevices[deviceID] = targetState
+
+    def removeDevice(self, deviceID):
+        if deviceID in self.targetDevices:
+            del self.targetDevices[deviceID]
+
+    def setLastTrigger(self, lastTrigger):
+        self.lastTrigger = lastTrigger

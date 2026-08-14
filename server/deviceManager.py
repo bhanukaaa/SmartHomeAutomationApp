@@ -26,6 +26,8 @@ class DeviceManager:
             case _:
                 print("INVALID USER ACTION")
 
+    # deserializing json
+
     def saveIncomingDevice(self, jsonData, roomID=None, parentDeviceID=None):
         deviceData = {
             "deviceID": jsonData.get("deviceID"),
@@ -54,6 +56,8 @@ class DeviceManager:
             devDict["tempID"] = jsonData["tempID"]
         devDict["subUnits"] = parsedSubUnits
         return devDict
+
+    # serializing for json
 
     def serializeDevice(self, deviceRow):
         encoded = {
@@ -104,6 +108,8 @@ class DeviceManager:
             "targetStates": [d["targetState"] for d in devices]
         }
 
+    # new data handlers
+
     def handleNewRoom(self, jsonData):
         tempRoomID = jsonData.get("tempRoomID")
         roomName = jsonData.get("name", "")
@@ -147,7 +153,7 @@ class DeviceManager:
         startTime = jsonData.get("startTime", "")
         routineState = jsonData.get("routineState", "")
         numDevices = jsonData.get("numDevices", 0)
-        deviceIDs = jsonData.get("devices", [])
+        deviceIDs = jsonData.get("deviceIDs", [])
         targetStates = jsonData.get("targetStates", [])
 
         routineID = self.repo.insertRoutine(
@@ -156,12 +162,13 @@ class DeviceManager:
         routineRow = self.repo.fetchRoutineByID(routineID)
 
         for i in range(numDevices):
-            self.repo.addDeviceToRoutine(routineID, deviceIDs[i], targetStates[i])
+            self.repo.addDeviceToRoutine(
+                routineID, deviceIDs[i], targetStates[i])
 
         payload = {
             "action": "newRoutine",
             "tempRoutineID": tempRoutineID,
-            "routineID" : routineID,
+            "routineID": routineID,
             "routine": self.serializeRoutine(routineRow)
         }
         self.mqttInterface.client.publish(
@@ -181,6 +188,8 @@ class DeviceManager:
     #         "routineUpdate/server", json.dumps(payload)
     #     )
 
+    # data sync handler
+
     def handleSync(self, jsonData):
         requesterID = jsonData["requesterID"]
 
@@ -196,6 +205,8 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "sync/response", json.dumps(payload)
         )
+
+    # user action handlers
 
     def toggleDeviceState(self, deviceID):
         device = self.repo.fetchDevicebyID(deviceID)
@@ -227,38 +238,58 @@ class DeviceManager:
     def handleToggleDevice(self, jsonData):
         return self.toggleDeviceState(jsonData.get("deviceID"))
 
-    def checkSafetyDevices(self):
-        now = time.time()
-        safetyDevices = self.repo.fetchActiveSafetyDevices()
+    # safety critical device worker
 
+    def checkSafetyDevices(self):
+        safetyDevices = self.repo.fetchActiveSafetyDevices()
+        if len(safetyDevices) == 0:
+            return
+
+        now = time.time()
         for device in safetyDevices:
-            turnOnTime = device.get("turnOnTime") or 0
-            maxOnDuration = device.get("maxOnDuration") or 0
+            turnOnTime = device.turnOnTime
+            maxOnDuration = device.maxOnDuration
             if turnOnTime > 0 and (now - turnOnTime) >= maxOnDuration:
-                self.setDeviceState(device["deviceID"], "OFF")
+                self.setDeviceState(device.deviceID, "OFF")
+                self.repo.deactivateSafetyDevice(device.deviceID)
+
+    # routine workers
 
     def handleStartRoutine(self, jsonData):
         routineID = jsonData.get("routineID")
         self.triggerRoutine(routineID)
 
     def triggerRoutine(self, routineID):
-        routineRow = self.repo.fetchRoutineByID(routineID)
-        if not routineRow: return False
+        routine = self.repo.fetchEnabledRoutineByID(routineID)
+        if not routine:
+            return False
 
-        devices = self.repo.fetchRoutineDevices(routineID)
-        for device in devices:
-            self.setDeviceState(device["deviceID"], device["targetState"])
+        for deviceID, targetState in routine.targetDevices.items():
+            self.setDeviceState(deviceID, targetState)
 
-        self.repo.updateRoutineLastTrigger(routineID)
         return True
 
     def checkRoutines(self):
-        currentTime = time.strftime("%H:%M")
-        currentDate = time.strftime("%Y-%m-%d")
-
         enabledRoutines = self.repo.fetchEnabledRoutines()
+        if len(enabledRoutines) == 0:
+            return
+
+        localTime = time.gmtime(time.time() + 19800)
+        currentTime = time.strftime("%H:%M", localTime)
+        currentDate = time.strftime("%Y-%m-%d", localTime)
 
         for routine in enabledRoutines:
-            if routine.get("startTime") == currentTime and routine.get("lastTriggerDate") != currentDate:
-                self.updateRoutineLastTrigger(routine.get("routineID"))
-                self.triggerRoutine(routine)
+            if routine.startTime == currentTime and routine.lastTrigger != currentDate:
+                self.repo.updateRoutineLastTrigger(
+                    routine.routineID, currentDate)
+                self.triggerRoutine(routine.routineID)
+
+    def debugDump(self, jsonData):
+        print("\n\nDEBUG DUMP:")
+        rooms = self.repo.fetchAllRooms()
+        for room in rooms:
+            print(self.serializeRoom(room))
+
+        routines = self.repo.fetchAllRoutines()
+        for routine in routines:
+            print(self.serializeRoutine(routine))

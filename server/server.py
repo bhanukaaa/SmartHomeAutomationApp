@@ -23,6 +23,7 @@ def main():
         subscriptions=[
             "action/user",
             "sync/request",
+            "testing"
         ],
     )
     mqttInterface.start()
@@ -37,7 +38,7 @@ def main():
 def backgroundLoop():
     if deviceManager:
         deviceManager.checkSafetyDevices()
-        # deviceManager.checkRoutines()
+        deviceManager.checkRoutines()
 
     time.sleep(0.5)
 
