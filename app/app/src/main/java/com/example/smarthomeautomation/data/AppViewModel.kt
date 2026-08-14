@@ -44,7 +44,7 @@ class AppViewModel : ViewModel() {
                 "newDevice" -> newDeviceCallback(jsonData)
                 "newRoom" -> newRoomCallback(jsonData)
                 "deviceStatusUpdate" -> statusUpdateCallback(jsonData)
-//                "newRoutine" -> newRoutineCallback(jsonData)
+                "newRoutine" -> newRoutineCallback(jsonData)
                 else -> throw Exception("Invalid Callback Action")
             }
 
@@ -181,22 +181,32 @@ class AppViewModel : ViewModel() {
 
     fun addRoutineHandler(routine: Routine) {
         val tempRoutineID = Random.nextInt()
+        var newRoutine = routine.copy(routineID = tempRoutineID)
 
         _uiState.update { currState ->
             currState.copy(
-                routines = currState.routines + routine,
+                routines = currState.routines + newRoutine,
                 currentRoutineID = tempRoutineID
             )
         }
 
         viewModelScope.launch(Dispatchers.IO) {
+            val deviceIDArray = JSONArray()
+            val targetStateArray = JSONArray()
+
+            routine.devices.forEach { (deviceId, targetState) ->
+                deviceIDArray.put(deviceId)
+                targetStateArray.put(targetState.name)
+            }
+
             val payload = JSONObject().apply {
                 put("tempRoutineID", tempRoutineID)
                 put("name", routine.name)
                 put("startTime", routine.startTime)
-                put("routineState", routine.routineState.toString())
+                put("routineState", routine.routineState.name)
                 put("numDevices", routine.devices.size)
-//                put("devices", )
+                put("devices", deviceIDArray)
+                put("targetStates", targetStateArray)
                 put("action", "newRoutine")
             }
 
@@ -205,6 +215,7 @@ class AppViewModel : ViewModel() {
                 payload
             )
         }
+
     }
 
     fun toggleDeviceHandler(deviceID: Int) {
@@ -362,11 +373,50 @@ class AppViewModel : ViewModel() {
                     roomList.add(Room(roomID, name, floorName, deviceList))
                 }
 
+                val routineList = mutableListOf<Routine>()
+                val syncRoutines = jsonData.optJSONArray("routines") ?: JSONArray()
+                for (i in 0 until syncRoutines.length()) {
+                    val routineJson = syncRoutines.getJSONObject(i)
+
+                    val routineID = routineJson.getInt("routineID")
+                    val routineName = routineJson.getString("name")
+                    val startTime = routineJson.getString("startTime")
+                    val routineStateStr = routineJson.getString("routineState")
+                    val routineState = try {
+                        RoutineState.valueOf(routineStateStr)
+                    } catch (e: Exception) {
+                        RoutineState.ENABLED
+                    }
+                    val numDevices = routineJson.getInt("numDevices")
+
+                    val deviceIDArr = routineJson.getJSONArray("devices") ?: JSONArray()
+                    val targetStateArr = routineJson.getJSONArray("targetStates") ?: JSONArray()
+                    if (deviceIDArr.length() != targetStateArr.length()) {
+                        throw Error("Routine Device and Target State arrays do not match")
+                    }
+                    var routineDeviceMap = mutableMapOf<Int, DeviceState>()
+                    for (j in 0 until numDevices) {
+                        routineDeviceMap[deviceIDArr.getInt(j)] =
+                            DeviceState.valueOf(targetStateArr.getString(j))
+                    }
+
+                    routineList.add(
+                        Routine(
+                            routineID = routineID,
+                            name = routineName,
+                            startTime = startTime,
+                            routineState = routineState,
+                            devices = routineDeviceMap
+                        )
+                    )
+                }
+
                 val initialFloorName = roomList.firstOrNull()?.floorName ?: "G"
                 val initialRoomID = roomList.firstOrNull()?.roomID
 
                 currState.copy(
                     rooms = roomList,
+                    routines = routineList,
                     deviceRegistry = registry,
                     currentFloorName = initialFloorName,
                     currentRoomID = initialRoomID
@@ -406,30 +456,29 @@ class AppViewModel : ViewModel() {
         }
     }
 
-//    fun newRoutineCallback(jsonData: JSONObject) {
-//        val tempRoutineID = jsonData.optInt("tempRoutineID", -1)
-//        val routineObj = jsonData.optJSONObject("routine") ?: return
-//        val newRoutineID = routineObj.optInt("routineID", -1)
-//
-//        if (tempRoutineID == -1 || newRoutineID == -1) return
-//
-//        _uiState.update { currState ->
-//            val updatedRoutines = currState.routines.map { routine ->
-//                if (routine.routineID == tempRoutineID) {
-//                    routine.copy(routineID = newRoutineID)
-//                } else routine
-//            }
-//
-//            val updatedCurrentRoutineID = if (currState.currentRoutineID == tempRoutineID) {
-//                newRoutineID
-//            } else currState.currentRoutineID
-//
-//            currState.copy(
-//                routines = updatedRoutines,
-//                currentRoomID = updatedCurrentRoutineID
-//            )
-//        }
-//    }
+    fun newRoutineCallback(jsonData: JSONObject) {
+        val tempRoutineID = jsonData.optInt("tempRoutineID", -1)
+        val newRoutineID = jsonData.optInt("routineID", -1)
+
+        if (tempRoutineID == -1 || newRoutineID == -1) return
+
+        _uiState.update { currState ->
+            val updatedRoutines = currState.routines.map { routine ->
+                if (routine.routineID == tempRoutineID) {
+                    routine.copy(routineID = newRoutineID)
+                } else routine
+            }
+
+            val updatedCurrentRoutineID = if (currState.currentRoutineID == tempRoutineID) {
+                newRoutineID
+            } else currState.currentRoutineID
+
+            currState.copy(
+                routines = updatedRoutines,
+                currentRoomID = updatedCurrentRoutineID
+            )
+        }
+    }
 
     fun statusUpdateCallback(jsonData: JSONObject) {
         val deviceID = jsonData.optInt("deviceID", -1)
