@@ -207,7 +207,8 @@ fun DeviceCard(
                 ) {
                     Row(
                         modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = device.name.ifBlank { "Unnamed" },
@@ -219,20 +220,28 @@ fun DeviceCard(
                             modifier = Modifier.weight(1f, fill = false)
                         )
 
-                        if (device is MultiUnit) {
-                            Icon(
-                                imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
-                                contentDescription = "Expand",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .padding(start = 4.dp)
-                                    .size(16.dp)
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null
-                                    ) { isExpanded = !isExpanded }
+                        if (labelText != "") {
+                            Text(
+                                text = labelText,
+                                color = Color.White.copy(alpha = 0.6f),
+                                style = MaterialTheme.typography.labelSmall,
                             )
                         }
+
+//                        if (device is MultiUnit) {
+//                            Icon(
+//                                imageVector = if (isExpanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+//                                contentDescription = "Expand",
+//                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                modifier = Modifier
+//                                    .padding(start = 4.dp)
+//                                    .size(16.dp)
+//                                    .clickable(
+//                                        interactionSource = remember { MutableInteractionSource() },
+//                                        indication = null
+//                                    ) { isExpanded = !isExpanded }
+//                            )
+//                        }
                     }
 
                     Switch(
