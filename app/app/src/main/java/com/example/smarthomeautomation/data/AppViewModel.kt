@@ -230,17 +230,17 @@ class AppViewModel : ViewModel() {
         )
     }
 
-//    fun toggleRoutineHandler(routineID: Int) {
-//        val payload = JSONObject().apply {
-//            put("routineID", routineID)
-//            put("action", "toggleRoutine")
-//        }
-//
-//        MqttProvider.manager.publish(
-//            "action/user",
-//            payload
-//        )
-//    }
+    fun toggleRoutineHandler(routineID: Int) {
+        val payload = JSONObject().apply {
+            put("routineID", routineID)
+            put("action", "toggleRoutine")
+        }
+
+        MqttProvider.manager.publish(
+            "action/user",
+            payload
+        )
+    }
 
     fun newDeviceCallback(jsonData: JSONObject) {
         _uiState.update { currState ->
