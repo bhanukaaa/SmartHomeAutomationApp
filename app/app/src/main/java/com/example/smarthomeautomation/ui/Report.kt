@@ -130,7 +130,6 @@ fun Report(
                     }
                 }
 
-                // Energy Consumption Table
                 item {
                     UsageTable(
                         title = "Energy Consumption",
@@ -231,7 +230,6 @@ fun UsageTable(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -252,7 +250,6 @@ fun UsageTable(
 
         HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 1.dp)
 
-        // Rows
         data.forEach { row ->
             Row(
                 modifier = Modifier
