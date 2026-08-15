@@ -46,6 +46,7 @@ class AppViewModel : ViewModel() {
                 "deviceStatusUpdate" -> statusUpdateCallback(jsonData)
                 "newRoutine" -> newRoutineCallback(jsonData)
                 "deleteDevice" -> deleteDeviceCallback(jsonData)
+                "usageReport" -> usageReportCallback(jsonData)
                 else -> throw Exception("Invalid Callback Action")
             }
 
@@ -534,7 +535,7 @@ class AppViewModel : ViewModel() {
         if (deviceID == -1) return
 
         _uiState.update { currState ->
-            val targetRoomID = currState.deviceRegistry[deviceID] ?: return
+            val targetRoomID = currState.deviceRegistry[deviceID] ?: return@update currState
 
             val updatedRooms = currState.rooms.map { room ->
                 if (room.roomID != targetRoomID) room
@@ -547,6 +548,43 @@ class AppViewModel : ViewModel() {
 
             currState.copy(rooms = updatedRooms, deviceRegistry = updatedRegistry)
         }
+    }
+
+    fun usageReportCallback(jsonData: JSONObject) {
+        val report = jsonData.optJSONArray("report") ?: return
+
+        
+        _uiState.update { currState ->
+            fun updateOnTime(dev: Device): Device {
+                val onTime = report.optInt(dev.deviceID.toString(), dev.onTimeMinutes)
+                val updated = dev.copy(onTimeMinutes = onTime)
+                
+                return if (updated is MultiUnit) {
+                    val updatedSubUnits = updated.subUnits.map { updateOnTime(it) }.toMutableList()
+                    updated.copy(subUnits = updatedSubUnits)
+                } else {
+                    updated
+                }
+            }
+
+            val updatedRooms = currState.rooms.map { room ->
+                val updatedDevices = room.devices.map { device ->
+                    updateOnTime(device)
+                }
+                room.copy(devices = updatedDevices)
+            }
+            currState.copy(rooms = updatedRooms)
+        }
+    }
+
+    fun fetchUsageReport() {
+        val payload = JSONObject().apply {
+            put("action", "getReport")
+        }
+        MqttProvider.manager.publish(
+            "action/user",
+            payload
+        )
     }
 
     fun sync() {

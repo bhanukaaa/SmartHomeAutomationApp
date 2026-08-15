@@ -25,6 +25,8 @@ class DeviceManager:
                 self.handleStartRoutine(jsonData)
             case "deleteDevice":
                 self.handleDeleteDevice(jsonData)
+            case "getReport":
+                self.getUsageReport(jsonData)
             case _:
                 print("INVALID USER ACTION")
 
@@ -302,6 +304,16 @@ class DeviceManager:
                 self.repo.updateRoutineLastTrigger(
                     routine.routineID, currentDate)
                 self.triggerRoutine(routine.routineID)
+
+    def getUsageReport(self, jsonData):
+        report = self.repo.generateUsageReport()
+        payload = {
+            "action": "usageReport",
+            "report": report
+        }
+        self.mqttInterface.client.publish(
+            "action/server", json.dumps(payload)
+        )
 
     # TESTING ONLY =========================================================
 

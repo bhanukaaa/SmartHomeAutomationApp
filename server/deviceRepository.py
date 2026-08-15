@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from database import DatabaseManager
 
 
@@ -73,6 +75,77 @@ class DeviceRepository:
             )
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    @staticmethod
+    def parseLogTimestamp(timestampValue):
+        if timestampValue is None:
+            raise ValueError("device log timestamp is missing")
+
+        if isinstance(timestampValue, (int, float)):
+            return datetime.fromtimestamp(float(timestampValue), tz=timezone.utc)
+
+        text = str(timestampValue).strip()
+        if not text:
+            raise ValueError("device log timestamp is empty")
+
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError:
+            try:
+                dt = datetime.fromtimestamp(float(text), tz=timezone.utc)
+            except ValueError as exc:
+                raise ValueError(f"Unsupported device log timestamp format: {timestampValue}") from exc
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt
+
+    def fetchDeviceLifetimeOnTime(self, deviceID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT timestamp, state FROM deviceLog WHERE deviceID = ? ORDER BY timestamp ASC",
+                (deviceID,),
+            )
+            rows = cursor.fetchall()
+
+        totalSeconds = 0.0
+        onStartTime = None
+
+        for row in rows:
+            logTime = self.parseLogTimestamp(row["timestamp"])
+            state = row["state"]
+
+            if state == "ON":
+                onStartTime = logTime
+            elif state in ("OFF", "ERROR", "DISCONNECTED") and onStartTime is not None:
+                totalSeconds += (logTime - onStartTime).total_seconds()
+                onStartTime = None
+
+        return totalSeconds
+
+    def generateUsageReport(self):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT deviceID, name FROM device")
+            devices = cursor.fetchall()
+
+        report = []
+        for device in devices:
+            deviceID = device["deviceID"]
+            deviceName = device["name"]
+            lifetimeOnTime = self.fetchDeviceLifetimeOnTime(deviceID)
+            report.append({
+                "deviceID": deviceID,
+                "name": deviceName,
+                "lifetimeOnTime": lifetimeOnTime
+            })
+
+        return report
 
     def fetchSubUnits(self, parentDeviceID):
         with self.dbManager.getDBConnection() as conn:

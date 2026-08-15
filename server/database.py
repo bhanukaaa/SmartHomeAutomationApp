@@ -58,6 +58,14 @@ class DatabaseManager:
                     FOREIGN KEY (routineID) REFERENCES routine(routineID) ON DELETE CASCADE,
                     FOREIGN KEY (deviceID) REFERENCES device(deviceID) ON DELETE CASCADE
                 );
+
+                CREATE TABLE IF NOT EXISTS deviceLog (
+                    logID INTEGER PRIMARY KEY,
+                    deviceID INTEGER NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK(state IN ('ON', 'OFF', 'ERROR', 'DISCONNECTED')),
+                    FOREIGN KEY (deviceID) REFERENCES device(deviceID) ON DELETE CASCADE
+                );
             """)
 
             columns = [row[1] for row in cursor.execute("PRAGMA table_info(device)").fetchall()]
