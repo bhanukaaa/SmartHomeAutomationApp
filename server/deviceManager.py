@@ -187,7 +187,8 @@ class DeviceManager:
 
     def deleteDevice(self, deviceID):
         device = self.repo.fetchDevicebyID(deviceID)
-        if not device: return
+        if not device:
+            return
 
         if device["type"] == "MultiUnit":
             subUnits = self.repo.fetchSubUnits(deviceID)
@@ -303,12 +304,13 @@ class DeviceManager:
                 self.triggerRoutine(routine.routineID)
 
     def toggleRoutineState(self, routineID):
-            routine = self.repo.fetchRoutinebyID(routineID)
-            if not routine:
-                return False
+        routine = self.repo.fetchRoutinebyID(routineID)
+        if not routine:
+            return False
 
     def handleToggleRoutines(self, jsonData):
-            return self.toggleRoutineState(jsonData.get("routineID"))
+        return self.toggleRoutineState(jsonData.get("routineID"))
+
     # TESTING ONLY =========================================================
 
     def testing(self, jsonData):
