@@ -120,7 +120,8 @@ class AppViewModel : ViewModel() {
                     "tempID" to dev.deviceID,
                     "roomID" to targetRoomID,
                     "name" to dev.name,
-                    "type" to dev.type
+                    "type" to dev.type,
+                    "power" to dev.power
                 )
 
                 when (dev) {

@@ -16,8 +16,8 @@ class DeviceRepository:
                 cursor.execute(
                     """
                     INSERT INTO device
-                    (roomID, parentDeviceID, name, state, type, size, maxOnDuration, turnOnTime)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+                    (roomID, parentDeviceID, name, state, type, power, size, maxOnDuration, turnOnTime)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
                     """,
                     (
                         deviceData["roomID"],
@@ -25,6 +25,7 @@ class DeviceRepository:
                         deviceData["name"],
                         deviceData["state"],
                         deviceData["type"],
+                        deviceData["power"],
                         deviceData["size"],
                         deviceData["maxOnDuration"],
                     ),
@@ -34,8 +35,8 @@ class DeviceRepository:
                 cursor.execute(
                     """
                     INSERT INTO device
-                    (deviceID, roomID, parentDeviceID, name, state, type, size, maxOnDuration, turnOnTime)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                    (deviceID, roomID, parentDeviceID, name, state, type, power, size, maxOnDuration, turnOnTime)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
                     """,
                     (
                         deviceData["deviceID"],
@@ -44,6 +45,7 @@ class DeviceRepository:
                         deviceData["name"],
                         deviceData["state"],
                         deviceData["type"],
+                        deviceData["power"],
                         deviceData["size"],
                         deviceData["maxOnDuration"],
                     ),

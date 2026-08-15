@@ -29,6 +29,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -38,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +77,7 @@ fun AddDevicePage(
     onDeviceCreated: () -> Unit = {}
 ) {
     var name by remember { mutableStateOf("") }
+    var powerInput by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(DeviceCategory.SingleUnit) }
     var sizeInput by remember { mutableStateOf("") }
     var maxOnDurationInput by remember { mutableStateOf("") }
@@ -186,6 +189,17 @@ fun AddDevicePage(
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        OutlinedTextField(
+                            value = powerInput,
+                            onValueChange = { powerInput = it },
+                            label = { Text("Power (W)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            colors = textFieldColors,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
                         ExposedDropdownMenuBox(
                             expanded = isDropdownExpanded,
                             onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
@@ -201,7 +215,7 @@ fun AddDevicePage(
                                 colors = textFieldColors,
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .menuAnchor()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                                     .fillMaxWidth()
                             )
 
@@ -236,7 +250,7 @@ fun AddDevicePage(
                                         sizeInput = input
                                         val newSize = input.toIntOrNull() ?: 0
                                         while (subUnitNames.size > newSize) {
-                                            subUnitNames.removeLast()
+                                            subUnitNames.removeAt(subUnitNames.size - 1)
                                         }
                                     },
                                     label = { Text("Max Sub Units (Size)") },
@@ -295,11 +309,13 @@ fun AddDevicePage(
                 Button(
                     onClick = {
                         val typeName = selectedCategory.name
+                        val power = powerInput.toFloatOrNull() ?: 0f
                         val newDevice: Device = when (selectedCategory) {
                             DeviceCategory.SingleUnit -> SingleUnit(
                                 state = DeviceState.OFF,
                                 name = name,
-                                type = typeName
+                                type = typeName,
+                                power = power
                             )
 
                             DeviceCategory.MultiUnit -> {
@@ -307,7 +323,8 @@ fun AddDevicePage(
                                     SingleUnit(
                                         state = DeviceState.OFF,
                                         name = subName,
-                                        type = DeviceCategory.SingleUnit.name
+                                        type = DeviceCategory.SingleUnit.name,
+                                        power = 0f // Subunits usually don't have individual power in this model or defaults to 0
                                     )
                                 }.toMutableList<Device>()
 
@@ -316,7 +333,8 @@ fun AddDevicePage(
                                     subUnits = subUnitsList,
                                     state = DeviceState.OFF,
                                     name = name,
-                                    type = typeName
+                                    type = typeName,
+                                    power = power
                                 )
                             }
 
@@ -324,7 +342,8 @@ fun AddDevicePage(
                                 maxOnDuration = maxOnDurationInput.toLongOrNull() ?: 0L,
                                 state = DeviceState.OFF,
                                 name = name,
-                                type = typeName
+                                type = typeName,
+                                power = power
                             )
                         }
 

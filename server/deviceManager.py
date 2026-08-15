@@ -36,6 +36,7 @@ class DeviceManager:
             "type": jsonData.get("type", ""),
             "name": jsonData.get("name", ""),
             "state": jsonData.get("state", "OFF"),
+            "power": jsonData.get("power"),
             "size": jsonData.get("size"),
             "maxOnDuration": jsonData.get("maxOnDuration"),
             "roomID": roomID,
@@ -67,6 +68,7 @@ class DeviceManager:
             "state": deviceRow["state"],
             "name": deviceRow["name"],
             "type": deviceRow["type"],
+            "power": deviceRow["power"]
         }
 
         if "tempID" in deviceRow:

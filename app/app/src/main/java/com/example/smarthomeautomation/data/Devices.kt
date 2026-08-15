@@ -11,15 +11,17 @@ open class Device(
     var deviceID: Int = -1,
     var state: DeviceState = DeviceState.OFF,
     var name: String = "",
-    var type: String = ""
+    var type: String = "",
+    var power: Float = 0f
 ) {
     open fun copy(
         deviceID: Int = this.deviceID,
         state: DeviceState = this.state,
         name: String = this.name,
-        type: String = this.type
+        type: String = this.type,
+        power: Float = this.power
     ): Device {
-        return Device(deviceID, state, name, type)
+        return Device(deviceID, state, name, type, power)
     }
 }
 
@@ -27,15 +29,17 @@ class SingleUnit(
     deviceID: Int = -1,
     state: DeviceState = DeviceState.OFF,
     name: String = "",
-    type: String = ""
-) : Device(deviceID, state, name, type) {
+    type: String = "",
+    power: Float = 0f
+) : Device(deviceID, state, name, type, power) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
-        type: String
+        type: String,
+        power: Float
     ): SingleUnit {
-        return SingleUnit(deviceID, state, name, type)
+        return SingleUnit(deviceID, state, name, type, power)
     }
 }
 
@@ -45,15 +49,17 @@ class MultiUnit(
     val subUnits: MutableList<Device> = mutableListOf(),
     state: DeviceState = DeviceState.OFF,
     name: String = "",
-    type: String = ""
-) : Device(deviceID, state, name, type) {
+    type: String = "",
+    power: Float = 0f
+) : Device(deviceID, state, name, type, power) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
-        type: String
+        type: String,
+        power: Float
     ): MultiUnit {
-        return MultiUnit(deviceID, size, subUnits.toMutableList(), state, name, type)
+        return MultiUnit(deviceID, size, subUnits.toMutableList(), state, name, type, power)
     }
 
     fun copy(
@@ -62,9 +68,10 @@ class MultiUnit(
         subUnits: MutableList<Device> = this.subUnits.toMutableList(),
         state: DeviceState = this.state,
         name: String = this.name,
-        type: String = this.type
+        type: String = this.type,
+        power: Float = this.power
     ): MultiUnit {
-        return MultiUnit(deviceID, size, subUnits, state, name, type)
+        return MultiUnit(deviceID, size, subUnits, state, name, type, power)
     }
 }
 
@@ -73,15 +80,17 @@ class SafetyCritical(
     val maxOnDuration: Long,
     state: DeviceState = DeviceState.OFF,
     name: String = "",
-    type: String = ""
-) : Device(deviceID, state, name, type) {
+    type: String = "",
+    power: Float = 0f
+) : Device(deviceID, state, name, type, power) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
-        type: String
+        type: String,
+        power: Float
     ): SafetyCritical {
-        return SafetyCritical(deviceID, maxOnDuration, state, name, type)
+        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power)
     }
 
     fun copy(
@@ -89,8 +98,9 @@ class SafetyCritical(
         maxOnDuration: Long = this.maxOnDuration,
         state: DeviceState = this.state,
         name: String = this.name,
-        type: String = this.type
+        type: String = this.type,
+        power: Float = this.power
     ): SafetyCritical {
-        return SafetyCritical(deviceID, maxOnDuration, state, name, type)
+        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power)
     }
 }

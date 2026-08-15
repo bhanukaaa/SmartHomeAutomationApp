@@ -35,6 +35,7 @@ class DatabaseManager:
                     name TEXT NOT NULL,
                     state TEXT NOT NULL DEFAULT 'OFF' CHECK(state IN ('ON', 'OFF', 'ERROR', 'DISCONNECTED')),
                     type TEXT NOT NULL CHECK(type IN ('SingleUnit', 'MultiUnit', 'SafetyCritical')),
+                    power REAL NOT NULL DEFAULT 0,
                     size INTEGER,
                     maxOnDuration INTEGER,
                     turnOnTime REAL DEFAULT 0,
@@ -58,5 +59,10 @@ class DatabaseManager:
                     FOREIGN KEY (deviceID) REFERENCES device(deviceID) ON DELETE CASCADE
                 );
             """)
+
+            columns = [row[1] for row in cursor.execute("PRAGMA table_info(device)").fetchall()]
+            if "power" not in columns:
+                cursor.execute("ALTER TABLE device ADD COLUMN power REAL NOT NULL DEFAULT 0")
+
             conn.commit()
             conn.close()
