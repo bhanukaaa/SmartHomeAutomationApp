@@ -43,6 +43,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -135,7 +137,42 @@ fun HomePage(
         )
 
         Scaffold(
-            containerColor = Color.Transparent,
+            containerColor = Color.Transparent, topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 8.dp)
+                        ) {
+                            Text(
+                                "Rooms",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            OutlinedButton(
+                                onClick = onAddRoomButtonClick,
+                                border = BorderStroke(
+                                    0.5.dp,
+                                    Color.White.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                                Spacer(modifier = Modifier.size(4.dp))
+                                Text("Add Room", color = Color.White)
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            },
             bottomBar = {
                 NavBar(navController, hazeState)
             }
@@ -143,52 +180,9 @@ fun HomePage(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(floors, key = { it }) { floorName ->
-                        FilterChip(
-                            selected = floorName.equals(currentFloorName, ignoreCase = true),
-                            onClick = {
-                                val targetIndex =
-                                    floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
-                                if (targetIndex >= 0) {
-                                    viewModel.selectFloor(floorName)
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(targetIndex)
-                                    }
-                                }
-                            },
-                            label = {
-                                if (floorName == "Active") {
-                                    Icon(
-                                        imageVector = Icons.Outlined.FlashOn,
-                                        contentDescription = "Active Devices",
-                                        tint = Color(0xFFFFFFFF),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                } else {
-                                    Text(floorName, color = Color.White)
-                                }
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color.White.copy(alpha = 0.2f),
-                                containerColor = Color.Transparent
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                borderColor = Color.White.copy(alpha = 0.2f),
-                                selectedBorderColor = Color.White.copy(alpha = 0.5f),
-                                borderWidth = 0.5.dp,
-                                enabled = true,
-                                selected = floorName.equals(currentFloorName, ignoreCase = true)
-                            )
-                        )
-                    }
-                }
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.weight(1f)
@@ -239,43 +233,11 @@ fun HomePage(
                                 columns = GridCells.Fixed(2),
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(horizontal = 8.dp),
+                                    .padding(horizontal = 12.dp),
                                 contentPadding = PaddingValues(bottom = 80.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                item(span = { GridItemSpan(2) }) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "Rooms",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color.White
-                                        )
-                                        OutlinedButton(
-                                            onClick = onAddRoomButtonClick,
-                                            border = BorderStroke(
-                                                0.5.dp,
-                                                Color.White.copy(alpha = 0.3f)
-                                            )
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Add,
-                                                contentDescription = null,
-                                                tint = Color.White
-                                            )
-                                            Spacer(modifier = Modifier.size(4.dp))
-                                            Text("Add Room", color = Color.White)
-                                        }
-                                    }
-                                }
-
                                 items(roomsOnFloor, key = { it.roomID }) { room ->
                                     RoomCard(
                                         room = room,
@@ -290,6 +252,52 @@ fun HomePage(
                         }
                     }
                 }
+
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(floors, key = { it }) { floorName ->
+                        FilterChip(
+                            selected = floorName.equals(currentFloorName, ignoreCase = true),
+                            onClick = {
+                                val targetIndex =
+                                    floors.indexOfFirst { it.equals(floorName, ignoreCase = true) }
+                                if (targetIndex >= 0) {
+                                    viewModel.selectFloor(floorName)
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(targetIndex)
+                                    }
+                                }
+                            },
+                            label = {
+                                if (floorName == "Active") {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FlashOn,
+                                        contentDescription = "Active Devices",
+                                        tint = Color(0xFFFFFFFF),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                } else {
+                                    Text(floorName, color = Color.White)
+                                }
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color.White.copy(alpha = 0.2f),
+                                containerColor = Color.Transparent
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                borderColor = Color.White.copy(alpha = 0.2f),
+                                selectedBorderColor = Color.White.copy(alpha = 0.5f),
+                                borderWidth = 0.5.dp,
+                                enabled = true,
+                                selected = floorName.equals(currentFloorName, ignoreCase = true)
+                            )
+                        )
+                    }
+                }
+
+
             }
         }
     }

@@ -12,9 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -31,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -45,21 +50,14 @@ import dev.chrisbanes.haze.haze
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoomPage(
+fun CameraPage(
     viewModel: AppViewModel,
     navController: NavHostController,
-    onAddDeviceButtonClick: () -> Unit,
-    onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val hazeState = remember { HazeState() }
 
-    val currentRoom = remember(uiState.rooms, uiState.currentRoomID) {
-        uiState.rooms.find { it.roomID == uiState.currentRoomID }
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
-        // Deep Sophisticated Background for Glassmorphism
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -90,13 +88,13 @@ fun RoomPage(
                                 .padding(end = 8.dp)
                         ) {
                             Text(
-                                "${currentRoom?.name ?: ""} Devices",
+                                "Cameras",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleLarge
                             )
                             OutlinedButton(
-                                onClick = onAddDeviceButtonClick,
+                                onClick = {},
                                 border = BorderStroke(
                                     0.5.dp,
                                     Color.White.copy(alpha = 0.3f)
@@ -108,7 +106,7 @@ fun RoomPage(
                                     tint = Color.White
                                 )
                                 Spacer(modifier = Modifier.size(4.dp))
-                                Text("Add Device", color = Color.White)
+                                Text("Add Camera", color = Color.White)
                             }
                         }
                     },
@@ -120,35 +118,20 @@ fun RoomPage(
             }
         ) { innerPadding ->
             Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                val devices = currentRoom?.devices ?: emptyList()
-
-                if (devices.isEmpty()) {
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Text(
-                            text = "No Devices in this Room",
-                            modifier = Modifier.padding(16.dp),
-                            textAlign = TextAlign.Center,
-                            color = Color.White.copy(alpha = 0.6f)
+                for (camUrl in uiState.cameras) {
+                    Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                        CamFeed(
+                            modifier = Modifier.clip(RoundedCornerShape(20.dp)),
+                            streamUrl = camUrl
                         )
-
-                        Spacer(Modifier.height(16.dp))
-
-                        Button(onClick = onAddDeviceButtonClick) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Add Device")
-                        }
                     }
-                } else {
-                    DeviceList(viewModel, devices, hazeState)
                 }
             }
         }

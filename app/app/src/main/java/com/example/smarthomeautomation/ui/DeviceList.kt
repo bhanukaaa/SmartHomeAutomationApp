@@ -55,7 +55,7 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>, hazeState: HazeSt
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 12.dp),
         contentPadding = PaddingValues(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

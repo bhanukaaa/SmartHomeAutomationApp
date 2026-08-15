@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -44,7 +45,8 @@ fun NavBar(
 ) {
     val navItems = listOf(
         NavItem(AppPages.Home.name, "Home", Icons.Default.Home),
-        NavItem(AppPages.Routine.name, "Routines", Icons.Default.PlayArrow)
+        NavItem(AppPages.Routine.name, "Routines", Icons.Default.PlayArrow),
+        NavItem(AppPages.Cameras.name, "Cameras", Icons.Default.Videocam)
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
