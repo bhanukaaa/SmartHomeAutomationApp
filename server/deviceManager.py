@@ -165,7 +165,8 @@ class DeviceManager:
 
         for i in range(numDevices):
             self.repo.addDeviceToRoutine(
-                routineID, deviceIDs[i], targetStates[i])
+                routineID, deviceIDs[i], targetStates[i]
+            )
 
         payload = {
             "action": "newRoutine",

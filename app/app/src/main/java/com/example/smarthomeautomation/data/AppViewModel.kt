@@ -218,7 +218,7 @@ class AppViewModel : ViewModel() {
                 put("startTime", routine.startTime)
                 put("routineState", routine.routineState.name)
                 put("numDevices", routine.devices.size)
-                put("devices", deviceIDArray)
+                put("deviceIDs", deviceIDArray)
                 put("targetStates", targetStateArray)
                 put("action", "newRoutine")
             }

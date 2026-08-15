@@ -65,7 +65,7 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
         initialMinute = currentTime.get(Calendar.MINUTE),
         is24Hour = true,
     )
-    
+
     // Track selected devices by ID and their intended state for the routine
     var selectedDeviceStates by remember { mutableStateOf(emptyMap<Int, DeviceState>()) }
 
@@ -158,12 +158,14 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                 )
 
                 val rooms = uiState.rooms ?: emptyList()
-                val allDevicesWithRoomInfo = rooms.flatMap { room -> 
-                    (room.devices ?: emptyList()).map { device -> 
+                val allDevicesWithRoomInfo = rooms.flatMap { room ->
+                    (room.devices ?: emptyList()).map { device ->
                         device to ("${room.floorName} - ${room.name}")
-                    } 
+                    }
                 }
-                val selectedDevices = allDevicesWithRoomInfo.filter { (device, _) -> selectedDeviceStates.containsKey(device.deviceID) }
+                val selectedDevices = allDevicesWithRoomInfo.filter { (device, _) ->
+                    selectedDeviceStates.containsKey(device.deviceID)
+                }
 
                 Text(
                     text = "Selected Devices",
@@ -190,14 +192,17 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
                                 )
-                                val displayDevice = device.copy().apply { state = selectedDeviceStates[device.deviceID]!! }
+                                val displayDevice = device.copy()
+                                    .apply { state = selectedDeviceStates[device.deviceID]!! }
                                 DeviceCard(
                                     device = displayDevice,
                                     enabled = true,
                                     onToggle = { deviceID ->
                                         val currentState = selectedDeviceStates[deviceID]
-                                        val newState = if (currentState == DeviceState.ON) DeviceState.OFF else DeviceState.ON
-                                        selectedDeviceStates = selectedDeviceStates + (deviceID to newState)
+                                        val newState =
+                                            if (currentState == DeviceState.ON) DeviceState.OFF else DeviceState.ON
+                                        selectedDeviceStates =
+                                            selectedDeviceStates + (deviceID to newState)
                                     },
                                     hazeState = hazeState,
                                     onBodyClick = { deviceID ->
@@ -223,8 +228,9 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     for (room in rooms) {
                         val devices = room.devices ?: emptyList()
-                        val unselectedDevicesInRoom = devices.filter { !selectedDeviceStates.containsKey(it.deviceID) }
-                        
+                        val unselectedDevicesInRoom =
+                            devices.filter { !selectedDeviceStates.containsKey(it.deviceID) }
+
                         if (unselectedDevicesInRoom.isNotEmpty()) {
                             Column {
                                 Text(
@@ -241,7 +247,8 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                                             onToggle = {},
                                             hazeState = hazeState,
                                             onBodyClick = { deviceID ->
-                                                selectedDeviceStates = selectedDeviceStates + (deviceID to DeviceState.ON)
+                                                selectedDeviceStates =
+                                                    selectedDeviceStates + (deviceID to DeviceState.ON)
                                             },
                                             small = true
                                         )
@@ -254,13 +261,15 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
 
                 Button(
                     onClick = {
-                        val timeString = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                        val startTime = timePickerState.hour.toString().padStart(2, '0') +
+                                ":" + timePickerState.minute.toString().padStart(2, '0')
                         val newRoutine = Routine(
                             name = routineName,
-                            startTime = timeString,
+                            startTime = startTime,
                             routineState = RoutineState.ENABLED,
                             devices = selectedDeviceStates
                         )
+
                         viewModel.addRoutineHandler(newRoutine)
                         onRoutineCreated()
                     },

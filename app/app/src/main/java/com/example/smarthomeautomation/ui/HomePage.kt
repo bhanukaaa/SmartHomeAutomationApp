@@ -26,7 +26,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.MeetingRoom
+import androidx.compose.material.icons.outlined.FlashOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.data.DeviceState
 import com.example.smarthomeautomation.data.Room
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
@@ -75,12 +79,18 @@ fun HomePage(
     val coroutineScope = rememberCoroutineScope()
     val hazeState = remember { HazeState() }
 
-    val floors = remember(uiState.rooms) {
-        val extractedFloors = uiState.rooms.map { it.floorName }.distinct()
-        if (extractedFloors.isEmpty()) listOf("G") else extractedFloors
+    val activeDevices = remember(uiState.rooms) {
+        uiState.rooms.flatMap { it.devices }.filter { device ->
+            device.state == DeviceState.ON
+        }
     }
 
-    val pagerState = rememberPagerState(initialPage = 0) { floors.size }
+    val floors = remember(uiState.rooms) {
+        val extractedFloors = uiState.rooms.map { it.floorName }.distinct()
+        listOf("Active") + extractedFloors.ifEmpty { listOf("G") }
+    }
+
+    val pagerState = rememberPagerState(initialPage = 1) { floors.size }
 
     LaunchedEffect(uiState.currentFloorName, floors) {
         val targetIndex =
@@ -104,7 +114,6 @@ fun HomePage(
     val currentFloorName = floors.getOrNull(pagerState.currentPage) ?: "G"
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Deep Sophisticated Diagonal Background for Glassmorphism
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,7 +121,7 @@ fun HomePage(
                     Brush.linearGradient(
                         colors = listOf(
                             Color(0xFFA6767A), // Top-Right: Muted Terracotta Brick
-                            Color(0xFF5D748A)  ,// Bottom-Left: Muted Slate Blue, // Center: Bright Pale Lilac
+                            Color(0xFF5D748A), // Bottom-Left: Muted Slate Blue, // Center: Bright Pale Lilac
                             Color(0xFF5A756C)  // Bottom-Left: Pale Soft Sage
                         ),
                         start = Offset.Infinite,
@@ -156,7 +165,18 @@ fun HomePage(
                                     }
                                 }
                             },
-                            label = { Text(floorName, color = Color.White) },
+                            label = {
+                                if (floorName == "Active") {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FlashOn,
+                                        contentDescription = "Active Devices",
+                                        tint = Color(0xFFFFFFFF),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                } else {
+                                    Text(floorName, color = Color.White)
+                                }
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color.White.copy(alpha = 0.2f),
                                 containerColor = Color.Transparent
@@ -177,70 +197,98 @@ fun HomePage(
                     modifier = Modifier.weight(1f)
                 ) { page ->
                     val floorName = floors[page]
-                    val roomsOnFloor =
-                        uiState.rooms.filter { it.floorName.equals(floorName, ignoreCase = true) }
 
-                    if (roomsOnFloor.isEmpty()) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "No rooms on Floor $floorName", color = Color.White.copy(alpha = 0.6f))
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = onAddRoomButtonClick,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f))
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                                Spacer(modifier = Modifier.size(8.dp))
-                                Text(text = "Add Room", color = Color.White)
-                            }
-                        }
+                    if (floorName.equals("Active", ignoreCase = true)) {
+                        DeviceList(viewModel, activeDevices, hazeState)
                     } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp),
-                            contentPadding = PaddingValues(bottom = 80.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            item(span = { GridItemSpan(2) }) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Rooms",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color.White
+                        val roomsOnFloor =
+                            uiState.rooms.filter {
+                                it.floorName.equals(
+                                    floorName,
+                                    ignoreCase = true
+                                )
+                            }
+
+                        if (roomsOnFloor.isEmpty()) {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "No rooms on Floor $floorName",
+                                    color = Color.White.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = onAddRoomButtonClick,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White.copy(
+                                            alpha = 0.1f
+                                        )
                                     )
-                                    OutlinedButton(
-                                        onClick = onAddRoomButtonClick,
-                                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.3f))
-                                    ) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                                        Spacer(modifier = Modifier.size(4.dp))
-                                        Text("Add Room", color = Color.White)
-                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.size(8.dp))
+                                    Text(text = "Add Room", color = Color.White)
                                 }
                             }
-
-                            items(roomsOnFloor, key = { it.roomID }) { room ->
-                                RoomCard(
-                                    room = room,
-                                    hazeState = hazeState,
-                                    onClick = {
-                                        viewModel.selectRoom(room.roomID)
-                                        onRoomClick(room.roomID)
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp),
+                                contentPadding = PaddingValues(bottom = 80.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                item(span = { GridItemSpan(2) }) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Rooms",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White
+                                        )
+                                        OutlinedButton(
+                                            onClick = onAddRoomButtonClick,
+                                            border = BorderStroke(
+                                                0.5.dp,
+                                                Color.White.copy(alpha = 0.3f)
+                                            )
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = null,
+                                                tint = Color.White
+                                            )
+                                            Spacer(modifier = Modifier.size(4.dp))
+                                            Text("Add Room", color = Color.White)
+                                        }
                                     }
-                                )
+                                }
+
+                                items(roomsOnFloor, key = { it.roomID }) { room ->
+                                    RoomCard(
+                                        room = room,
+                                        hazeState = hazeState,
+                                        onClick = {
+                                            viewModel.selectRoom(room.roomID)
+                                            onRoomClick(room.roomID)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -260,11 +308,15 @@ fun RoomCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .hazeChild(state = hazeState, shape = RoundedCornerShape(24.dp), style = HazeDefaults.style(
-                blurRadius = 24.dp,
-                backgroundColor = Color.Transparent,
-                tint = Color.White.copy(alpha = 0.05f)
-            ))
+            .hazeChild(
+                state = hazeState,
+                shape = RoundedCornerShape(24.dp),
+                style = HazeDefaults.style(
+                    blurRadius = 24.dp,
+                    backgroundColor = Color.Transparent,
+                    tint = Color.White.copy(alpha = 0.05f)
+                )
+            )
             .background(Color.White.copy(alpha = 0.12f)) // simple background for testing
             .border(
                 width = 0.5.dp,
