@@ -76,7 +76,8 @@ fun DeviceCard(
     onBodyClick: (Int) -> Unit = {},
     onDelete: (Int) -> Unit = {},
     small: Boolean = false,
-    deleteable: Boolean = false
+    deleteable: Boolean = false,
+    enabled: Boolean = true
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -84,7 +85,7 @@ fun DeviceCard(
     val rawIsOn = device.state == DeviceState.ON
     val effectiveIsOn = rawIsOn && parentOn
     val isInteractive =
-        device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
+        enabled && device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
 
     val onGradient = Brush.linearGradient(
         colors = listOf(

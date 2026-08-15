@@ -243,10 +243,10 @@ class AppViewModel : ViewModel() {
         )
     }
 
-    fun toggleRoutineHandler(routineID: Int) {
+    fun startRoutineHandler(routineID: Int) {
         val payload = JSONObject().apply {
             put("routineID", routineID)
-            put("action", "toggleRoutine")
+            put("action", "startRoutine")
         }
 
         MqttProvider.manager.publish(

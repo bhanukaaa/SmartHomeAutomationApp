@@ -23,8 +23,6 @@ class DeviceManager:
                 self.handleNewRoutine(jsonData)
             case "startRoutine":
                 self.handleStartRoutine(jsonData)
-            case "toggleRoutine":
-                self.handleToggleRoutines(jsonData)
             case "deleteDevice":
                 self.handleDeleteDevice(jsonData)
             case _:
@@ -273,7 +271,6 @@ class DeviceManager:
                 self.repo.deactivateSafetyDevice(device.deviceID)
 
     # routine workers
-
     def handleStartRoutine(self, jsonData):
         routineID = jsonData.get("routineID")
         self.triggerRoutine(routineID)
@@ -302,14 +299,6 @@ class DeviceManager:
                 self.repo.updateRoutineLastTrigger(
                     routine.routineID, currentDate)
                 self.triggerRoutine(routine.routineID)
-
-    def toggleRoutineState(self, routineID):
-        routine = self.repo.fetchRoutinebyID(routineID)
-        if not routine:
-            return False
-
-    def handleToggleRoutines(self, jsonData):
-        return self.toggleRoutineState(jsonData.get("routineID"))
 
     # TESTING ONLY =========================================================
 

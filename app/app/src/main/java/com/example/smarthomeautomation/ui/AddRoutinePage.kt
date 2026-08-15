@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,15 +44,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
-import com.example.smarthomeautomation.data.Device
 import com.example.smarthomeautomation.data.DeviceState
 import com.example.smarthomeautomation.data.Routine
 import com.example.smarthomeautomation.data.RoutineState
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,34 +59,31 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
 
     var routineName by remember { mutableStateOf("") }
-    var startTime by remember { mutableStateOf("") }
     val currentTime = Calendar.getInstance()
     val timePickerState = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
         is24Hour = true,
     )
-    var routineState by remember { mutableStateOf(RoutineState.ENABLED) }
-    var selectedDevices by remember { mutableStateOf(emptyList<Device>()) }
+    
+    // Track selected devices by ID and their intended state for the routine
+    var selectedDeviceStates by remember { mutableStateOf(emptyMap<Int, DeviceState>()) }
 
     val scrollState = rememberScrollState()
     val hazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Deep Sophisticated Diagonal Background for Glassmorphism
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors =
-                                listOf(Color(0xFFA6767A), Color(0xFF5D748A), Color(0xFF5A756C)),
-                            start = Offset.Infinite,
-                            end = Offset.Zero,
-                        )
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFA6767A), Color(0xFF5D748A), Color(0xFF5A756C)),
+                        start = Offset.Infinite,
+                        end = Offset.Zero,
                     )
-                    .haze(state = hazeState)
+                )
+                .haze(state = hazeState)
         )
 
         Scaffold(
@@ -124,16 +119,15 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                val textFieldColors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color.White.copy(alpha = 0.5f),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                        focusedLabelColor = Color.White.copy(alpha = 0.7f),
-                        unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
-                        cursorColor = Color.White,
-                    )
+                val textFieldColors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                    focusedLabelColor = Color.White.copy(alpha = 0.7f),
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.5f),
+                    cursorColor = Color.White,
+                )
 
                 OutlinedTextField(
                     value = routineName,
@@ -145,18 +139,17 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                val timePickerColors =
-                    TimePickerDefaults.colors(
-                        timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.2f),
-                        timeSelectorUnselectedContainerColor = Color.White.copy(alpha = 0.08f),
-                        timeSelectorSelectedContentColor = Color.White,
-                        timeSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
-                        periodSelectorSelectedContainerColor = Color.White.copy(alpha = 0.25f),
-                        periodSelectorUnselectedContainerColor = Color.Transparent,
-                        periodSelectorSelectedContentColor = Color.White,
-                        periodSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
-                        periodSelectorBorderColor = Color.White.copy(alpha = 0.3f),
-                    )
+                val timePickerColors = TimePickerDefaults.colors(
+                    timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.2f),
+                    timeSelectorUnselectedContainerColor = Color.White.copy(alpha = 0.08f),
+                    timeSelectorSelectedContentColor = Color.White,
+                    timeSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
+                    periodSelectorSelectedContainerColor = Color.White.copy(alpha = 0.25f),
+                    periodSelectorUnselectedContainerColor = Color.Transparent,
+                    periodSelectorSelectedContentColor = Color.White,
+                    periodSelectorUnselectedContentColor = Color.White.copy(alpha = 0.7f),
+                    periodSelectorBorderColor = Color.White.copy(alpha = 0.3f),
+                )
 
                 TimeInput(
                     state = timePickerState,
@@ -164,56 +157,124 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-//                OutlinedTextField(
-//                    value = startTime,
-//                    onValueChange = { startTime = it },
-//                    label = { Text("Start Time") },
-//                    singleLine = true,
-//                    colors = textFieldColors,
-//                    shape = RoundedCornerShape(12.dp),
-//                    modifier = Modifier.fillMaxWidth(),
-//                )
+                val rooms = uiState.rooms ?: emptyList()
+                val allDevicesWithRoomInfo = rooms.flatMap { room -> 
+                    (room.devices ?: emptyList()).map { device -> 
+                        device to ("${room.floorName} - ${room.name}")
+                    } 
+                }
+                val selectedDevices = allDevicesWithRoomInfo.filter { (device, _) -> selectedDeviceStates.containsKey(device.deviceID) }
 
-                Column() {
-                    val rooms = uiState.rooms ?: emptyList()
+                Text(
+                    text = "Selected Devices",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                if (selectedDevices.isEmpty()) {
+                    Text(
+                        text = "No devices selected.",
+                        color = Color.White.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for ((device, roomLabel) in selectedDevices) {
+                            Column {
+                                Text(
+                                    text = roomLabel,
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                                )
+                                val displayDevice = device.copy().apply { state = selectedDeviceStates[device.deviceID]!! }
+                                DeviceCard(
+                                    device = displayDevice,
+                                    enabled = true,
+                                    onToggle = { deviceID ->
+                                        val currentState = selectedDeviceStates[deviceID]
+                                        val newState = if (currentState == DeviceState.ON) DeviceState.OFF else DeviceState.ON
+                                        selectedDeviceStates = selectedDeviceStates + (deviceID to newState)
+                                    },
+                                    hazeState = hazeState,
+                                    onBodyClick = { deviceID ->
+                                        selectedDeviceStates = selectedDeviceStates - deviceID
+                                    },
+                                    small = true
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // --- Device List Section ---
+                Text(
+                    text = "Available Devices",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     for (room in rooms) {
                         val devices = room.devices ?: emptyList()
-                        for (device in devices) {
-                            DeviceCard(
-                                device = device,
-                                onToggle = {},
-                                hazeState = hazeState,
-                                onBodyClick = {},
-                                small = true
-                            )
+                        val unselectedDevicesInRoom = devices.filter { !selectedDeviceStates.containsKey(it.deviceID) }
+                        
+                        if (unselectedDevicesInRoom.isNotEmpty()) {
+                            Column {
+                                Text(
+                                    text = "${room.floorName} - ${room.name}",
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
+                                )
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    for (device in unselectedDevicesInRoom) {
+                                        DeviceCard(
+                                            device = device,
+                                            enabled = false,
+                                            onToggle = {},
+                                            hazeState = hazeState,
+                                            onBodyClick = { deviceID ->
+                                                selectedDeviceStates = selectedDeviceStates + (deviceID to DeviceState.ON)
+                                            },
+                                            small = true
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 Button(
                     onClick = {
-                        val newRoutine =
-                            Routine(
-                                name = routineName,
-                                startTime = startTime,
-                                routineState = routineState,
-                                devices = emptyMap()
-                            )
+                        val timeString = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
+                        val newRoutine = Routine(
+                            name = routineName,
+                            startTime = timeString,
+                            routineState = RoutineState.ENABLED,
+                            devices = selectedDeviceStates
+                        )
                         viewModel.addRoutineHandler(newRoutine)
                         onRoutineCreated()
                     },
-                    enabled = routineName.isNotBlank(),
+                    enabled = routineName.isNotBlank() && selectedDeviceStates.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF10B981),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color.White.copy(alpha = 0.12f),
-                            disabledContentColor = Color.White.copy(alpha = 0.38f),
-                        ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF10B981),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.White.copy(alpha = 0.12f),
+                        disabledContentColor = Color.White.copy(alpha = 0.38f),
+                    ),
                 ) {
                     Text(
                         "Save Routine",
