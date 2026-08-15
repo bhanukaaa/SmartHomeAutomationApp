@@ -1,6 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val envProperties = Properties().apply {
+    val envFile = rootProject.file("../.env")
+    if (envFile.exists()) {
+        load(FileInputStream(envFile))
+    }
 }
 
 android {
@@ -25,6 +35,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val mqttHost = envProperties.getProperty("HOST", "\"9a09cc62f72a432a9a1dd98297bd3f1d.s1.eu.hivemq.cloud\"")
+        val mqttPort = envProperties.getProperty("PORT", "8883")
+
+        buildConfigField("String", "mqttHost", mqttHost)
+        buildConfigField("int", "mqttPort", mqttPort)
     }
 
     buildTypes {
@@ -42,6 +58,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

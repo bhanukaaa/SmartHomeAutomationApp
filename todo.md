@@ -1,9 +1,6 @@
 - floor plan layouts
-- light bulbs special class?
-- scheduling / routines
 - security cams
 - reporting usage data
-- check background loop workers to use objects instead of db queries
 
 {
     "action" : "newRoutine",

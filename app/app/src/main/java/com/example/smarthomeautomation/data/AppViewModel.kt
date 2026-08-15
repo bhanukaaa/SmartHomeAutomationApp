@@ -45,6 +45,7 @@ class AppViewModel : ViewModel() {
                 "newRoom" -> newRoomCallback(jsonData)
                 "deviceStatusUpdate" -> statusUpdateCallback(jsonData)
                 "newRoutine" -> newRoutineCallback(jsonData)
+                "deleteDevice" -> deleteDeviceCallback(jsonData)
                 else -> throw Exception("Invalid Callback Action")
             }
 
@@ -143,6 +144,18 @@ class AppViewModel : ViewModel() {
                 payload
             )
         }
+    }
+
+    fun deleteDeviceHandler(deviceID: Int) {
+        val payload = JSONObject().apply {
+            put("deviceID", deviceID)
+            put("action", "deleteDevice")
+        }
+
+        MqttProvider.manager.publish(
+            "action/user",
+            payload
+        )
     }
 
     fun addRoomHandler(name: String, floorName: String) {
@@ -518,6 +531,26 @@ class AppViewModel : ViewModel() {
             }
 
             currState.copy(rooms = updatedRooms)
+        }
+    }
+
+    fun deleteDeviceCallback(jsonData: JSONObject) {
+        val deviceID = jsonData.optInt("deviceID", -1)
+        if (deviceID == -1) return
+
+        _uiState.update { currState ->
+            val targetRoomID = currState.deviceRegistry[deviceID] ?: return
+
+            val updatedRooms = currState.rooms.map { room ->
+                if (room.roomID != targetRoomID) room
+                else room.copy(devices = room.devices.filter { it.deviceID != deviceID })
+            }
+
+            val updatedRegistry = currState.deviceRegistry.toMutableMap().apply {
+                remove(deviceID)
+            }
+
+            currState.copy(rooms = updatedRooms, deviceRegistry = updatedRegistry)
         }
     }
 

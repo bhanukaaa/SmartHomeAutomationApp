@@ -25,6 +25,8 @@ class DeviceManager:
                 self.handleStartRoutine(jsonData)
             case "toggleRoutine":
                 self.handleToggleRoutines(jsonData)
+            case "deleteDevice":
+                self.handleDeleteDevice(jsonData)
             case _:
                 print("INVALID USER ACTION")
 
@@ -177,18 +179,32 @@ class DeviceManager:
             "action/server", json.dumps(payload)
         )
 
-    # def handleRoutineUpdate(self, jsonData):
-    #     routineID = jsonData.get("routineID")
-    #     deviceID = jsonData.get("deviceID")
-    #     targetState = jsonData.get("targetState", "ON")
+    # delete data handlers
 
-    #     self.repo.addDeviceToRoutine(routineID, deviceID, targetState)
-    #     routineRow = self.repo.fetchRoutineByID(routineID)
+    def handleDeleteDevice(self, jsonData):
+        deviceID = jsonData.get("deviceID")
+        self.deleteDevice(deviceID)
 
-    #     payload = self.serializeRoutine(routineRow)
-    #     self.mqttInterface.client.publish(
-    #         "routineUpdate/server", json.dumps(payload)
-    #     )
+    def deleteDevice(self, deviceID):
+        device = self.repo.fetchDevicebyID(deviceID)
+        if not device: return
+
+        if device["type"] == "MultiUnit":
+            subUnits = self.repo.fetchSubUnits(deviceID)
+            for sub in subUnits:
+                self.deleteDevice(sub["deviceID"])
+        self.repo.deleteDevice(deviceID)
+
+        payload = {
+            "action": "deleteDevice",
+            "deviceID": deviceID,
+            "roomID": device["roomID"]
+        }
+
+        self.mqttInterface.client.publish(
+            "action/server",
+            json.dumps(payload)
+        )
 
     # data sync handler
 

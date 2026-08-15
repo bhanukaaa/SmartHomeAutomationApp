@@ -50,6 +50,19 @@ class DeviceRepository:
                 )
                 return deviceData["deviceID"]
 
+    def deleteDevice(self, deviceID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM device WHERE deviceID = ?", (deviceID,)
+            )
+            for routine in self.deviceRoutines:
+                if deviceID in self.deviceRoutines[routine].targetDevices:
+                    self.deviceRoutines[routine].removeDevice(deviceID)
+
+            if deviceID in self.activeSafetyDevices:
+                del self.activeSafetyDevices[deviceID]
+
     def fetchDevicebyID(self, deviceID):
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()
