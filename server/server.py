@@ -15,9 +15,11 @@ def main():
     dbPath = os.getenv("DB_PATH", "/data/app.db")
     dbManager = DatabaseManager(dbPath)
 
+    mqttHost = os.getenv("HOST", "9a09cc62f72a432a9a1dd98297bd3f1d.s1.eu.hivemq.cloud")
+    mqttPort = int(os.getenv("PORT", 8883))
     mqttInterface = MQTTInterface(
-        host="9a09cc62f72a432a9a1dd98297bd3f1d.s1.eu.hivemq.cloud",
-        port=8883,
+        host=mqttHost,
+        port=mqttPort,
         username="pythonServer",
         password="12345678",
         subscriptions=[

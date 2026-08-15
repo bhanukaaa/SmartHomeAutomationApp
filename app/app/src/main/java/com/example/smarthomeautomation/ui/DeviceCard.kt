@@ -60,6 +60,12 @@ import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DeviceCard(
     device: Device,
@@ -68,9 +74,13 @@ fun DeviceCard(
     modifier: Modifier = Modifier,
     parentOn: Boolean = true,
     onBodyClick: (Int) -> Unit = {},
-    small: Boolean = false
+    onDelete: (Int) -> Unit = {},
+    small: Boolean = false,
+    deleteable: Boolean = false
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val rawIsOn = device.state == DeviceState.ON
     val effectiveIsOn = rawIsOn && parentOn
     val isInteractive =
@@ -100,15 +110,64 @@ fun DeviceCard(
     val shapeRadius = if (small) 16.dp else 24.dp
     val contentPadding = if (small) 10.dp else 16.dp
 
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            containerColor = Color(0xEE1E1E2E),
+            shape = RoundedCornerShape(24.dp),
+            title = {
+                Text(
+                    text = "Delete Device",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete ${device.name}?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.75f)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete(device.deviceID)
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = Color(0xFFEF4444),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(
+                        text = "Cancel",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        )
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
+            .combinedClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
                 onClick = {
                     onBodyClick(device.deviceID)
                 },
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                onLongClick = if (!small && deleteable) {
+                    { showDeleteDialog = true }
+                } else null
             ),
         shape = RoundedCornerShape(shapeRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -145,8 +204,7 @@ fun DeviceCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -307,6 +365,7 @@ fun DeviceCard(
                                     onToggle = onToggle,
                                     hazeState = hazeState,
                                     parentOn = effectiveIsOn,
+                                    onBodyClick = onBodyClick,
                                     small = small,
                                     modifier = Modifier
                                         .weight(1f)
@@ -318,6 +377,7 @@ fun DeviceCard(
                                         onToggle = onToggle,
                                         hazeState = hazeState,
                                         parentOn = effectiveIsOn,
+                                        onBodyClick = onBodyClick,
                                         small = small,
                                         modifier = Modifier
                                             .weight(1f)
@@ -334,6 +394,7 @@ fun DeviceCard(
         }
     }
 }
+
 
 @Composable
 private fun StateBadge(state: DeviceState) {

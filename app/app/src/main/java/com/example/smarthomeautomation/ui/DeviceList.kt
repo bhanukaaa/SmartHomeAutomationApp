@@ -67,6 +67,10 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>, hazeState: HazeSt
                         onToggle = { deviceID ->
                             viewModel.toggleDeviceHandler(deviceID)
                         },
+                        onDelete = { deviceID ->
+                            viewModel.deleteDeviceHandler(deviceID)
+                        },
+                        deleteable = true,
                         hazeState = hazeState,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -84,6 +88,10 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>, hazeState: HazeSt
                             onToggle = { deviceID ->
                                 viewModel.toggleDeviceHandler(deviceID)
                             },
+                            onDelete = { deviceID ->
+                                viewModel.deleteDeviceHandler(deviceID)
+                            },
+                            deleteable = true,
                             hazeState = hazeState,
                             modifier = Modifier
                                 .weight(1f)
@@ -95,6 +103,10 @@ fun DeviceList(viewModel: AppViewModel, devices: List<Device>, hazeState: HazeSt
                                 onToggle = { deviceID ->
                                     viewModel.toggleDeviceHandler(deviceID)
                                 },
+                                onDelete = { deviceID ->
+                                    viewModel.deleteDeviceHandler(deviceID)
+                                },
+                                deleteable = true,
                                 hazeState = hazeState,
                                 modifier = Modifier
                                     .weight(1f)
