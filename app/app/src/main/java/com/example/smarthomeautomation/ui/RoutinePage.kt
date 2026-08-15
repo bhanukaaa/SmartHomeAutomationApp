@@ -30,10 +30,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.data.Routine
+import dev.chrisbanes.haze.HazeState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +46,7 @@ fun RoutinePage(
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-//    val currentRoutine = remember(uiState.routines, uiState.currentRoutineID) {
-//        uiState.routines.find { it.routineID == uiState.currentRoutineID }
-//    }
+    val hazeState = remember { HazeState() }
 
     Scaffold(
         topBar = {
@@ -93,41 +93,49 @@ fun RoutinePage(
                     }
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Routines",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            OutlinedButton(onClick = onAddRoutineButtonClick) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                                Spacer(modifier = Modifier.size(4.dp))
-                                Text("Add Routine")
-                            }
-                        }
+                    Text(
+                        text = "Routines",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    OutlinedButton(onClick = onAddRoutineButtonClick) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.size(4.dp))
+                        Text("Add Routine")
                     }
-
-//                    items(routines, key = { it.routineID }) { routine ->
-//                        RoutineCard(
-//                            routine = routine,
-//                            onToggle = { routineID ->
-////                                viewModel.toggleRoutineHandler(routineID)
-//                            }
-//                        )
-//                    }
                 }
+                RoutineList(viewModel, routines, hazeState)
             }
+        }
+    }
+}
+
+@Composable
+fun RoutineList(viewModel: AppViewModel, routines: List<Routine>, hazeState: HazeState) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp),
+        contentPadding = PaddingValues(bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(routines, key = { it.routineID }) { routine ->
+            RoutineCard(
+                routine = routine,
+                onToggle = { routineID ->
+                    viewModel.toggleRoutineHandler(routineID)
+                },
+                hazeState = hazeState,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
