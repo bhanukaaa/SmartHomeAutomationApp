@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Videocam
@@ -46,6 +47,7 @@ fun NavBar(
     val navItems = listOf(
         NavItem(AppPages.Home.name, "Home", Icons.Default.Home),
         NavItem(AppPages.Routine.name, "Routines", Icons.Default.PlayArrow),
+        NavItem(AppPages.Report.name, "Reports", Icons.Default.Assessment),
         NavItem(AppPages.Cameras.name, "Cameras", Icons.Default.Videocam)
     )
 

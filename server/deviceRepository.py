@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from database import DatabaseManager
 
 
@@ -74,6 +76,98 @@ class DeviceRepository:
             row = cursor.fetchone()
             return dict(row) if row else None
 
+    def logDeviceState(self, deviceID, state):
+        with self.dbManager.lock:
+            with self.dbManager.getDBConnection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO deviceLog (deviceID, timestamp, state) VALUES (?, ?, ?)",
+                    (
+                        deviceID,
+                        datetime.now(timezone.utc).isoformat(),
+                        state
+                    )
+                )
+                conn.commit()
+
+    @staticmethod
+    def parseLogTimestamp(timestampValue):
+        if timestampValue is None:
+            raise ValueError("device log timestamp is missing")
+
+        if isinstance(timestampValue, (int, float)):
+            return datetime.fromtimestamp(float(timestampValue), tz=timezone.utc)
+
+        text = str(timestampValue).strip()
+        if not text:
+            raise ValueError("device log timestamp is empty")
+
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError:
+            try:
+                dt = datetime.fromtimestamp(float(text), tz=timezone.utc)
+            except ValueError as exc:
+                raise ValueError(f"Unsupported device log timestamp format: {timestampValue}") from exc
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt
+
+    def fetchDeviceLifetimeOnTime(self, deviceID):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT timestamp, state FROM deviceLog WHERE deviceID = ? ORDER BY timestamp ASC",
+                (deviceID,),
+            )
+            rows = cursor.fetchall()
+
+        totalSeconds = 0.0
+        onStartTime = None
+        currentState = "OFF"
+
+        for row in rows:
+            logTime = self.parseLogTimestamp(row["timestamp"])
+            state = row["state"]
+
+            if state == "ON":
+                onStartTime = logTime
+                currentState = "ON"
+            elif state in ("OFF", "ERROR", "DISCONNECTED") and onStartTime is not None:
+                totalSeconds += (logTime - onStartTime).total_seconds()
+                onStartTime = None
+                currentState = state
+
+        if onStartTime is not None and currentState == "ON":
+            totalSeconds += (datetime.now(timezone.utc) - onStartTime).total_seconds()
+
+        return totalSeconds
+
+    def generateUsageReport(self):
+        with self.dbManager.getDBConnection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT deviceID, name FROM device")
+            devices = cursor.fetchall()
+
+        report = []
+        for device in devices:
+            deviceID = device["deviceID"]
+            deviceName = device["name"]
+            lifetimeOnTime = self.fetchDeviceLifetimeOnTime(deviceID)
+            report.append({
+                "deviceID": deviceID,
+                "name": deviceName,
+                "lifetimeOnTime": int(lifetimeOnTime//60),
+                "onTimeMinutes": int(lifetimeOnTime // 60)
+            })
+
+        return report
+
     def fetchSubUnits(self, parentDeviceID):
         with self.dbManager.getDBConnection() as conn:
             cursor = conn.cursor()
@@ -106,20 +200,31 @@ class DeviceRepository:
             return [dict(row) for row in cursor.fetchall()]
 
     def updateDeviceState(self, deviceID, newState, turnOnTime=None):
-        with self.dbManager.getDBConnection() as conn:
-            if turnOnTime is not None:
-                conn.execute(
-                    "UPDATE device SET state = ?, turnOnTime = ? WHERE deviceID = ?",
-                    (newState, turnOnTime, deviceID),
-                )
-                if newState == "ON":
-                    self.activateSafetyDevice(deviceID, turnOnTime)
-            else:
-                conn.execute(
-                    "UPDATE device SET state = ? WHERE deviceID = ?",
-                    (newState, deviceID),
-                )
+        with self.dbManager.lock:
+            with self.dbManager.getDBConnection() as conn:
+                if turnOnTime is not None:
+                    conn.execute(
+                        "UPDATE device SET state = ?, turnOnTime = ? WHERE deviceID = ?",
+                        (newState, turnOnTime, deviceID),
+                    )
+                    if newState == "ON":
+                        self.activateSafetyDevice(deviceID, turnOnTime)
+                else:
+                    conn.execute(
+                        "UPDATE device SET state = ? WHERE deviceID = ?",
+                        (newState, deviceID),
+                    )
 
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO deviceLog (deviceID, timestamp, state) VALUES (?, ?, ?)",
+                    (
+                        deviceID,
+                        datetime.now(timezone.utc).isoformat(),
+                        newState,
+                    ),
+                )
+                conn.commit()
     def activateSafetyDevice(self, deviceID, turnOnTime):
         if deviceID not in self.maxOnDurations:
             device = self.fetchDevicebyID(deviceID)

@@ -47,6 +47,7 @@ class AppViewModel : ViewModel() {
                 "deviceStatusUpdate" -> statusUpdateCallback(jsonData)
                 "newRoutine" -> newRoutineCallback(jsonData)
                 "deleteDevice" -> deleteDeviceCallback(jsonData)
+                "usageReport" -> usageReportCallback(jsonData)
                 else -> throw Exception("Invalid Callback Action")
             }
 
@@ -546,7 +547,7 @@ class AppViewModel : ViewModel() {
         if (deviceID == -1) return
 
         _uiState.update { currState ->
-            val targetRoomID = currState.deviceRegistry[deviceID] ?: return
+            val targetRoomID = currState.deviceRegistry[deviceID] ?: return@update currState
 
             val updatedRooms = currState.rooms.map { room ->
                 if (room.roomID != targetRoomID) room
@@ -559,6 +560,61 @@ class AppViewModel : ViewModel() {
 
             currState.copy(rooms = updatedRooms, deviceRegistry = updatedRegistry)
         }
+    }
+
+    fun usageReportCallback(jsonData: JSONObject) {
+        Log.d("USAGE_REPORT_RAW", jsonData.toString())
+        val reportArray = jsonData.optJSONArray("report") ?: return
+
+        val onTimeMap = mutableMapOf<Int, Int>()
+        val lifetimeMap = mutableMapOf<Int, Int>()
+
+        for (i in 0 until reportArray.length()) {
+            val item = reportArray.optJSONObject(i)
+            if (item != null) {
+                val id = item.optInt("deviceID", -1)
+                if (id != -1) {
+                    onTimeMap[id] = item.optInt("onTimeMinutes", 0)
+                    lifetimeMap[id] = item.optInt("lifetimeOnTime", 0)
+                }
+            }
+        }
+        
+        _uiState.update { currState ->
+            fun updateUsageData(dev: Device): Device {
+                val onTime = onTimeMap.getOrDefault(dev.deviceID, dev.onTimeMinutes)
+                val lifetime = lifetimeMap.getOrDefault(dev.deviceID, dev.lifetimeOnTimeMinutes)
+                
+                var updated = dev.copy(
+                    onTimeMinutes = onTime,
+                    lifetimeOnTimeMinutes = lifetime
+                )
+                
+                if (updated is MultiUnit) {
+                    val updatedSubUnits = updated.subUnits.map { updateUsageData(it) }.toMutableList()
+                    updated = updated.copy(subUnits = updatedSubUnits)
+                }
+                return updated
+            }
+
+            val updatedRooms = currState.rooms.map { room ->
+                val updatedDevices = room.devices.map { device ->
+                    updateUsageData(device)
+                }
+                room.copy(devices = updatedDevices)
+            }
+            currState.copy(rooms = updatedRooms)
+        }
+    }
+
+    fun fetchUsageReport() {
+        val payload = JSONObject().apply {
+            put("action", "getReport")
+        }
+        MqttProvider.manager.publish(
+            "action/user",
+            payload
+        )
     }
 
     fun sync() {

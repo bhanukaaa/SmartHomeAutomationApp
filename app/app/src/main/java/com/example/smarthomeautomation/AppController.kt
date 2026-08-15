@@ -13,6 +13,7 @@ import com.example.smarthomeautomation.ui.AddRoomPage
 import com.example.smarthomeautomation.ui.AddRoutinePage
 import com.example.smarthomeautomation.ui.CameraPage
 import com.example.smarthomeautomation.ui.HomePage
+import com.example.smarthomeautomation.ui.Report
 import com.example.smarthomeautomation.ui.RoomPage
 import com.example.smarthomeautomation.ui.RoutinePage
 
@@ -23,6 +24,7 @@ enum class AppPages {
     AddRoutine,
     Room,
     Routine,
+    Report,
     Cameras
 }
 
@@ -97,6 +99,13 @@ fun AppController(
             )
         }
 
+        composable(route = AppPages.Report.name) {
+            Report(
+                viewModel = viewModel,
+                navController = navController
+            )
+        }
+        
         composable(route = AppPages.Cameras.name) {
             CameraPage(
                 viewModel = viewModel,
