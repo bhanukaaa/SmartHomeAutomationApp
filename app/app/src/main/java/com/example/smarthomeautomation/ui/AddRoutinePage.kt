@@ -217,7 +217,6 @@ fun AddRoutinePage(viewModel: AppViewModel, onRoutineCreated: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Device List Section ---
                 Text(
                     text = "Available Devices",
                     color = Color.White,

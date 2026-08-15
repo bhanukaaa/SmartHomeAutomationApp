@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.collections.set
 import kotlin.random.Random
 
 class AppViewModel : ViewModel() {
@@ -73,7 +74,6 @@ class AppViewModel : ViewModel() {
             )
         }
     }
-
 
 
     private fun assignTempIDs(device: Device): Device {
@@ -362,6 +362,7 @@ class AppViewModel : ViewModel() {
             _uiState.update { currState ->
                 val roomList = mutableListOf<Room>()
                 val registry = mutableMapOf<Int, Int>()
+                val roomLabels = mutableMapOf<Int, String>()
 
                 val syncRooms = jsonData.optJSONArray("rooms") ?: JSONArray()
                 for (i in 0 until syncRooms.length()) {
@@ -380,6 +381,7 @@ class AppViewModel : ViewModel() {
                     }
 
                     roomList.add(Room(roomID, name, floorName, deviceList))
+                    roomLabels[roomID] = "$floorName - $name"
                 }
 
                 val routineList = mutableListOf<Routine>()
@@ -428,7 +430,8 @@ class AppViewModel : ViewModel() {
                     routines = routineList,
                     deviceRegistry = registry,
                     currentFloorName = initialFloorName,
-                    currentRoomID = initialRoomID
+                    currentRoomID = initialRoomID,
+                    roomLabelRegistry = roomLabels
                 )
             }
             MqttProvider.manager.unsubscribe("sync/response")
@@ -457,10 +460,19 @@ class AppViewModel : ViewModel() {
                 newRoomID
             } else currState.currentRoomID
 
+            val updatedRoom = updatedRooms.find { it.roomID == newRoomID }
+            val updatedRoomLabelRegistry = currState.roomLabelRegistry.toMutableMap().apply {
+                remove(tempRoomID)
+                if (updatedRoom != null) {
+                    put(newRoomID, "${updatedRoom.floorName} - ${updatedRoom.name}")
+                }
+            }
+
             currState.copy(
                 rooms = updatedRooms,
                 deviceRegistry = updatedRegistry,
-                currentRoomID = updatedCurrentRoomID
+                currentRoomID = updatedCurrentRoomID,
+                roomLabelRegistry = updatedRoomLabelRegistry
             )
         }
     }

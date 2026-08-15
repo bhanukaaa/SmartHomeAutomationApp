@@ -90,6 +90,7 @@ fun HomePage(
         }
     }
 
+
     val floors = remember(uiState.rooms) {
         val extractedFloors = uiState.rooms.map { it.floorName }.distinct()
         listOf("Active") + extractedFloors.ifEmpty { listOf("G") }
@@ -190,7 +191,7 @@ fun HomePage(
                     val floorName = floors[page]
 
                     if (floorName.equals("Active", ignoreCase = true)) {
-                        DeviceList(viewModel, activeDevices, hazeState)
+                        DeviceList(viewModel, activeDevices, hazeState, showRoomLabel = true)
                     } else {
                         val roomsOnFloor =
                             uiState.rooms.filter {

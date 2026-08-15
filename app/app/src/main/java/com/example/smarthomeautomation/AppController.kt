@@ -58,8 +58,7 @@ fun AppController(
                 navController = navController,
                 onAddRoutineButtonClick = {
                     navController.navigate(AppPages.AddRoutine.name)
-                },
-                onBackClick = { navController.popBackStack() }
+                }
             )
         }
 
@@ -69,8 +68,7 @@ fun AppController(
                 navController = navController,
                 onAddDeviceButtonClick = {
                     navController.navigate(AppPages.AddDevice.name)
-                },
-                onBackClick = { navController.popBackStack() }
+                }
             )
         }
 

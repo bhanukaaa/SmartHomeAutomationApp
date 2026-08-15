@@ -48,8 +48,7 @@ import dev.chrisbanes.haze.haze
 fun RoomPage(
     viewModel: AppViewModel,
     navController: NavHostController,
-    onAddDeviceButtonClick: () -> Unit,
-    onBackClick: () -> Unit
+    onAddDeviceButtonClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val hazeState = remember { HazeState() }
@@ -59,7 +58,6 @@ fun RoomPage(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Deep Sophisticated Background for Glassmorphism
         Box(
             modifier = Modifier
                 .fillMaxSize()
