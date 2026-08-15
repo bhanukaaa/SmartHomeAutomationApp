@@ -23,6 +23,8 @@ class DeviceManager:
                 self.handleNewRoutine(jsonData)
             case "startRoutine":
                 self.handleStartRoutine(jsonData)
+            case "toggleRoutine":
+                self.handleToggleRoutines(jsonData)
             case _:
                 print("INVALID USER ACTION")
 
@@ -284,6 +286,13 @@ class DeviceManager:
                     routine.routineID, currentDate)
                 self.triggerRoutine(routine.routineID)
 
+    def toggleRoutineState(self, routineID):
+            routine = self.repo.fetchRoutinebyID(routineID)
+            if not routine:
+                return False
+
+    def handleToggleRoutines(self, jsonData):
+            return self.toggleRoutineState(jsonData.get("routineID"))
     # TESTING ONLY =========================================================
 
     def testing(self, jsonData):
