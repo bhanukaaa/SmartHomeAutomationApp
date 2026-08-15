@@ -73,14 +73,7 @@ class AppViewModel : ViewModel() {
         }
     }
 
-//    fun selectRoutine(routineID: Int?) {
-//        _uiState.update { currState ->
-//            val selectedRoutine = currState.routines.find { it.routineID == routineID }
-//            currState.copy(
-//                currentRoutineID = routineID
-//            )
-//        }
-//    }
+
 
     private fun assignTempIDs(device: Device): Device {
         val tempID = Random.nextInt()
@@ -323,11 +316,12 @@ class AppViewModel : ViewModel() {
         } catch (e: Exception) {
             DeviceState.OFF
         }
+        val power = json.optDouble("power", 0.0).toFloat()
 
         return when (type) {
             "SafetyCritical" -> {
                 val maxOnDuration = json.optLong("maxOnDuration", 0L)
-                SafetyCritical(deviceID, maxOnDuration, state, name, type)
+                SafetyCritical(deviceID, maxOnDuration, state, name, type, power)
             }
 
             "MultiUnit" -> {
@@ -337,15 +331,15 @@ class AppViewModel : ViewModel() {
                 for (i in 0 until subUnitsArray.length()) {
                     subUnits.add(parseDevice(subUnitsArray.getJSONObject(i)))
                 }
-                MultiUnit(deviceID, size, subUnits, state, name, type)
+                MultiUnit(deviceID, size, subUnits, state, name, type, power)
             }
 
             "SingleUnit" -> {
-                SingleUnit(deviceID, state, name, type)
+                SingleUnit(deviceID, state, name, type, power)
             }
 
             else -> {
-                Device(deviceID, state, name, type)
+                Device(deviceID, state, name, type, power)
             }
         }
     }

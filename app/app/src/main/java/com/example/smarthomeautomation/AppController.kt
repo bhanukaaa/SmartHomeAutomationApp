@@ -8,11 +8,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smarthomeautomation.data.AppViewModel
-import com.example.smarthomeautomation.ui.HomePage
-import com.example.smarthomeautomation.ui.RoomPage
 import com.example.smarthomeautomation.ui.AddDevicePage
 import com.example.smarthomeautomation.ui.AddRoomPage
 import com.example.smarthomeautomation.ui.AddRoutinePage
+import com.example.smarthomeautomation.ui.HomePage
+import com.example.smarthomeautomation.ui.RoomPage
 import com.example.smarthomeautomation.ui.RoutinePage
 
 enum class AppPages {
@@ -37,9 +37,7 @@ fun AppController(
         composable(route = AppPages.Home.name) {
             HomePage(
                 viewModel = viewModel,
-                onTempButtonClick = {
-                    navController.navigate(AppPages.Routine.name)
-                },
+                navController = navController,
                 onAddRoomButtonClick = {
                     navController.navigate(AppPages.AddRoom.name)
                 },
@@ -50,9 +48,21 @@ fun AppController(
             )
         }
 
+        composable(route = AppPages.Routine.name) {
+            RoutinePage(
+                viewModel = viewModel,
+                navController = navController,
+                onAddRoutineButtonClick = {
+                    navController.navigate(AppPages.AddRoutine.name)
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
         composable(route = AppPages.Room.name) {
             RoomPage(
                 viewModel = viewModel,
+                navController = navController,
                 onAddDeviceButtonClick = {
                     navController.navigate(AppPages.AddDevice.name)
                 },
@@ -82,18 +92,6 @@ fun AppController(
             AddRoutinePage(
                 viewModel = viewModel,
                 onRoutineCreated = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(route = AppPages.Routine.name) {
-            RoutinePage(
-                viewModel = viewModel,
-                onAddRoutineButtonClick = {
-                    navController.navigate(AppPages.AddRoutine.name)
-                },
-                onBackClick = {
                     navController.popBackStack()
                 }
             )

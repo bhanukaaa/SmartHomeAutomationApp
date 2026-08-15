@@ -41,8 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.smarthomeautomation.data.AppViewModel
 import com.example.smarthomeautomation.data.Routine
+import com.example.smarthomeautomation.ui.components.NavBar
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 
@@ -50,6 +52,7 @@ import dev.chrisbanes.haze.haze
 @Composable
 fun RoutinePage(
     viewModel: AppViewModel,
+    navController: NavHostController,
     onAddRoutineButtonClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -83,17 +86,11 @@ fun RoutinePage(
                             style = MaterialTheme.typography.titleLarge
                         )
                     },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
-                            )
-                        }
-                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
+            },
+            bottomBar = {
+                NavBar(navController, hazeState)
             }
         ) { innerPadding ->
             Column(

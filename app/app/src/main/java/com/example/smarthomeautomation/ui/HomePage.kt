@@ -58,9 +58,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.smarthomeautomation.data.AppViewModel
 import com.example.smarthomeautomation.data.DeviceState
 import com.example.smarthomeautomation.data.Room
+import com.example.smarthomeautomation.ui.components.NavBar
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
@@ -71,7 +74,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomePage(
     viewModel: AppViewModel,
-    onTempButtonClick: () -> Unit,
+    navController: NavHostController,
     onAddRoomButtonClick: () -> Unit,
     onRoomClick: (Int) -> Unit
 ) {
@@ -133,15 +136,9 @@ fun HomePage(
 
         Scaffold(
             containerColor = Color.Transparent,
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { onTempButtonClick() },
-                    content = { Icon(Icons.Default.Add, contentDescription = null) },
-                    containerColor = Color(0xFFC2185B),
-                    contentColor = Color.White
-                )
-            },
-            floatingActionButtonPosition = FabPosition.End
+            bottomBar = {
+                NavBar(navController, hazeState)
+            }
         ) { innerPadding ->
             Column(
                 modifier = Modifier

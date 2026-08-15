@@ -33,7 +33,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.smarthomeautomation.data.AppViewModel
+import com.example.smarthomeautomation.ui.components.NavBar
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 
@@ -41,6 +43,7 @@ import dev.chrisbanes.haze.haze
 @Composable
 fun RoomPage(
     viewModel: AppViewModel,
+    navController: NavHostController,
     onAddDeviceButtonClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -80,7 +83,10 @@ fun RoomPage(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             },
-            floatingActionButtonPosition = FabPosition.End
+            floatingActionButtonPosition = FabPosition.End,
+            bottomBar = {
+                NavBar(navController, hazeState)
+            }
         ) { innerPadding ->
             Column(
                 modifier = Modifier
