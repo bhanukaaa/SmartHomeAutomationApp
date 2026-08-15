@@ -1,5 +1,6 @@
 package com.example.smarthomeautomation.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,12 +80,35 @@ fun RoutinePage(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            "Routines",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 8.dp)
+                        ) {
+                            Text(
+                                "Routines",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            OutlinedButton(
+                                onClick = onAddRoutineButtonClick,
+                                border = BorderStroke(
+                                    0.5.dp,
+                                    Color.White.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                                Spacer(modifier = Modifier.size(4.dp))
+                                Text("Add Routine", color = Color.White)
+                            }
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
@@ -130,31 +154,6 @@ fun RoutinePage(
                         }
                     }
                 } else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Your Routines",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                        OutlinedButton(
-                            onClick = onAddRoutineButtonClick,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Add New")
-                        }
-                    }
                     RoutineList(viewModel, routines, hazeState)
                 }
             }
@@ -167,7 +166,7 @@ fun RoutineList(viewModel: AppViewModel, routines: List<Routine>, hazeState: Haz
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 12.dp),
         contentPadding = PaddingValues(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

@@ -551,25 +551,43 @@ class AppViewModel : ViewModel() {
     }
 
     fun usageReportCallback(jsonData: JSONObject) {
-        val report = jsonData.optJSONArray("report") ?: return
+        Log.d("USAGE_REPORT_RAW", jsonData.toString())
+        val reportArray = jsonData.optJSONArray("report") ?: return
 
+        val onTimeMap = mutableMapOf<Int, Int>()
+        val lifetimeMap = mutableMapOf<Int, Int>()
+
+        for (i in 0 until reportArray.length()) {
+            val item = reportArray.optJSONObject(i)
+            if (item != null) {
+                val id = item.optInt("deviceID", -1)
+                if (id != -1) {
+                    onTimeMap[id] = item.optInt("onTimeMinutes", 0)
+                    lifetimeMap[id] = item.optInt("lifetimeOnTime", 0)
+                }
+            }
+        }
         
         _uiState.update { currState ->
-            fun updateOnTime(dev: Device): Device {
-                val onTime = report.optInt(dev.deviceID.toString(), dev.onTimeMinutes)
-                val updated = dev.copy(onTimeMinutes = onTime)
+            fun updateUsageData(dev: Device): Device {
+                val onTime = onTimeMap.getOrDefault(dev.deviceID, dev.onTimeMinutes)
+                val lifetime = lifetimeMap.getOrDefault(dev.deviceID, dev.lifetimeOnTimeMinutes)
                 
-                return if (updated is MultiUnit) {
-                    val updatedSubUnits = updated.subUnits.map { updateOnTime(it) }.toMutableList()
-                    updated.copy(subUnits = updatedSubUnits)
-                } else {
-                    updated
+                var updated = dev.copy(
+                    onTimeMinutes = onTime,
+                    lifetimeOnTimeMinutes = lifetime
+                )
+                
+                if (updated is MultiUnit) {
+                    val updatedSubUnits = updated.subUnits.map { updateUsageData(it) }.toMutableList()
+                    updated = updated.copy(subUnits = updatedSubUnits)
                 }
+                return updated
             }
 
             val updatedRooms = currState.rooms.map { room ->
                 val updatedDevices = room.devices.map { device ->
-                    updateOnTime(device)
+                    updateUsageData(device)
                 }
                 room.copy(devices = updatedDevices)
             }

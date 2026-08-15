@@ -13,7 +13,8 @@ open class Device(
     var name: String = "",
     var type: String = "",
     var power: Float = 0f,
-    var onTimeMinutes: Int = 0 // Mocked for the report
+    var onTimeMinutes: Int = 0,
+    var lifetimeOnTimeMinutes: Int = 0
 ) {
     open fun copy(
         deviceID: Int = this.deviceID,
@@ -21,9 +22,10 @@ open class Device(
         name: String = this.name,
         type: String = this.type,
         power: Float = this.power,
-        onTimeMinutes: Int = this.onTimeMinutes
+        onTimeMinutes: Int = this.onTimeMinutes,
+        lifetimeOnTimeMinutes: Int = this.lifetimeOnTimeMinutes
     ): Device {
-        return Device(deviceID, state, name, type, power, onTimeMinutes)
+        return Device(deviceID, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 }
 
@@ -33,17 +35,19 @@ class SingleUnit(
     name: String = "",
     type: String = "",
     power: Float = 0f,
-    onTimeMinutes: Int = 0
-) : Device(deviceID, state, name, type, power, onTimeMinutes) {
+    onTimeMinutes: Int = 0,
+    lifetimeOnTimeMinutes: Int = 0
+) : Device(deviceID, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
         type: String,
         power: Float,
-        onTimeMinutes: Int
+        onTimeMinutes: Int,
+        lifetimeOnTimeMinutes: Int
     ): SingleUnit {
-        return SingleUnit(deviceID, state, name, type, power, onTimeMinutes)
+        return SingleUnit(deviceID, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 }
 
@@ -55,17 +59,19 @@ class MultiUnit(
     name: String = "",
     type: String = "",
     power: Float = 0f,
-    onTimeMinutes: Int = 0
-) : Device(deviceID, state, name, type, power, onTimeMinutes) {
+    onTimeMinutes: Int = 0,
+    lifetimeOnTimeMinutes: Int = 0
+) : Device(deviceID, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
         type: String,
         power: Float,
-        onTimeMinutes: Int
+        onTimeMinutes: Int,
+        lifetimeOnTimeMinutes: Int
     ): MultiUnit {
-        return MultiUnit(deviceID, size, subUnits.toMutableList(), state, name, type, power, onTimeMinutes)
+        return MultiUnit(deviceID, size, subUnits.toMutableList(), state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 
     fun copy(
@@ -76,9 +82,10 @@ class MultiUnit(
         name: String = this.name,
         type: String = this.type,
         power: Float = this.power,
-        onTimeMinutes: Int = this.onTimeMinutes
+        onTimeMinutes: Int = this.onTimeMinutes,
+        lifetimeOnTimeMinutes: Int = this.lifetimeOnTimeMinutes
     ): MultiUnit {
-        return MultiUnit(deviceID, size, subUnits, state, name, type, power, onTimeMinutes)
+        return MultiUnit(deviceID, size, subUnits, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 }
 
@@ -89,17 +96,19 @@ class SafetyCritical(
     name: String = "",
     type: String = "",
     power: Float = 0f,
-    onTimeMinutes: Int = 0
-) : Device(deviceID, state, name, type, power, onTimeMinutes) {
+    onTimeMinutes: Int = 0,
+    lifetimeOnTimeMinutes: Int = 0
+) : Device(deviceID, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes) {
     override fun copy(
         deviceID: Int,
         state: DeviceState,
         name: String,
         type: String,
         power: Float,
-        onTimeMinutes: Int
+        onTimeMinutes: Int,
+        lifetimeOnTimeMinutes: Int
     ): SafetyCritical {
-        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power, onTimeMinutes)
+        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 
     fun copy(
@@ -109,8 +118,9 @@ class SafetyCritical(
         name: String = this.name,
         type: String = this.type,
         power: Float = this.power,
-        onTimeMinutes: Int = this.onTimeMinutes
+        onTimeMinutes: Int = this.onTimeMinutes,
+        lifetimeOnTimeMinutes: Int = this.lifetimeOnTimeMinutes
     ): SafetyCritical {
-        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power, onTimeMinutes)
+        return SafetyCritical(deviceID, maxOnDuration, state, name, type, power, onTimeMinutes, lifetimeOnTimeMinutes)
     }
 }
