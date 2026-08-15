@@ -54,14 +54,12 @@ import dev.chrisbanes.haze.haze
 fun RoutinePage(
     viewModel: AppViewModel,
     navController: NavHostController,
-    onAddRoutineButtonClick: () -> Unit,
-    onBackClick: () -> Unit
+    onAddRoutineButtonClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val hazeState = remember { HazeState() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Deep Sophisticated Diagonal Background for Glassmorphism (matching AddRoutinePage)
         Box(
             modifier = Modifier
                 .fillMaxSize()

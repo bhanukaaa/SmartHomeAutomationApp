@@ -1,5 +1,4 @@
 - floor plan layouts
-- security cams
 - reporting usage data
 
 {
