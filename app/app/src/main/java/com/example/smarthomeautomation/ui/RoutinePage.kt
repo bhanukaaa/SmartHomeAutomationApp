@@ -175,7 +175,8 @@ fun RoutineList(viewModel: AppViewModel, routines: List<Routine>, hazeState: Haz
                     viewModel.startRoutineHandler(routineID)
                 },
                 hazeState = hazeState,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                viewModel = viewModel
             )
         }
     }

@@ -102,6 +102,7 @@ fun CamFeed(
                                     true
                                 }
                                 setOnPreparedListener { mp ->
+                                    mp.setVolume(0f, 0f)
                                     isLive = true
                                     mp.start()
                                 }

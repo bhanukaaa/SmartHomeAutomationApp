@@ -113,17 +113,17 @@ fun Report(
                     ) {
                         SummaryCard(
                             label = "Energy Used",
-                            value = "%.3f".format(totalEnergyKwh),
+                            value = "%.2f".format(totalEnergyKwh),
                             unit = "kWh",
-                            color = Color(0xFF10B981),
+                            color = Color(0xFF22F6AE),
                             modifier = Modifier.weight(1f),
                             hazeState = hazeState
                         )
                         SummaryCard(
                             label = "Active Time",
-                            value = totalOnTime.toString(),
-                            unit = "min",
-                            color = Color(0xFF10B981),
+                            value = "%.2f".format(totalOnTime / 60f),
+                            unit = "hours",
+                            color = Color(0xFF1FF8B0),
                             modifier = Modifier.weight(1f),
                             hazeState = hazeState
                         )
