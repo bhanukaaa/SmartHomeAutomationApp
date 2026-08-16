@@ -188,6 +188,15 @@ class DeviceManager:
             if updatedDevice:
                 socketio.emit('device_updated', updatedDevice.toDict())
 
+    def handleDeleteDevice(self, jsonData):
+        deviceID = jsonData.get("deviceID")
+        for room in self.rooms:
+            deviceToRemove = next((d for d in room.devices if d.deviceID == deviceID), None)
+            if deviceToRemove:
+                room.devices.remove(deviceToRemove)
+                socketio.emit('device_deleted', {"deviceID": deviceID})
+                break
+
 
 class MQTTInterface:
     def __init__(self, host, port, username, password, subscriptions):
@@ -228,6 +237,8 @@ class MQTTInterface:
                         self.deviceManager.addNewRoom(jsonData)
                     case "deviceStatusUpdate":
                         self.deviceManager.handleActionResponse(jsonData)
+                    case "deleteDevice":
+                        self.deviceManager.handleDeleteDevice(jsonData)
             elif msg.topic == "sync/response":
                 self.deviceManager.handleDatasyncResponse(jsonData)
         except Exception as e:

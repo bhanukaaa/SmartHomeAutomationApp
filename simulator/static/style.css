@@ -6,7 +6,6 @@
   --text-muted: #64748b;
   --border: #334155;
 
-  /* Device States */
   --state-on: #22c55e;
   --state-off: #94a3b8;
   --state-error: #ef4444;
@@ -23,27 +22,25 @@
 body {
   background-color: var(--bg);
   color: var(--text);
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1rem;
 }
 
 .container {
   width: 100%;
-  max-width: 600px;
+  max-width: 100%;
 }
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border);
 }
 
 h1 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
@@ -51,67 +48,73 @@ h1 {
   font-size: 0.85rem;
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
   color: var(--text-muted);
 }
 
-/* Floor Structure */
 .floors-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 .floor-section h2 {
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px dashed var(--border);
 }
 
-/* Room Card */
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
 .room-card {
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  border-radius: 8px;
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .room-header h3 {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
 }
 
 .device-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .empty-text {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-style: italic;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 
-/* Device Cards */
 .device-card {
   background-color: var(--card-nested);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 0.35rem;
 }
 
 .device-info {
@@ -123,19 +126,19 @@ h1 {
 .device-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .device-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .device-meta {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .extra-info {
@@ -144,25 +147,24 @@ h1 {
 
 .extra-info::before {
   content: "•";
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
-/* Status Pill */
 .status-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
+  gap: 5px;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 2px 7px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
 }
 
@@ -178,15 +180,14 @@ h1 {
 .status-disconnected { color: var(--state-disconnected); }
 .status-disconnected .dot { background-color: var(--state-disconnected); }
 
-/* Nested Sub-units */
 .sub-units {
   width: 100%;
-  margin-top: 0.75rem;
-  padding-left: 1rem;
+  margin-top: 0.35rem;
+  padding-left: 0.5rem;
   border-left: 2px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .sub-units .device-card {
@@ -195,4 +196,38 @@ h1 {
 
 .sub-units:empty {
   display: none;
+}
+
+.device-card {
+  background-color: var(--card-nested);
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.35rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.device-card.card-status-on {
+  border-left-color: var(--state-on);
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+.device-card.card-status-off {
+  border-left-color: var(--state-off);
+  opacity: 0.75;
+}
+
+.device-card.card-status-error {
+  border-left-color: var(--state-error);
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+.device-card.card-status-disconnected {
+  border-left-color: var(--state-disconnected);
+  background-color: rgba(245, 158, 11, 0.08);
 }

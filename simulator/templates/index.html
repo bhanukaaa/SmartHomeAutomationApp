@@ -79,6 +79,22 @@
                 }
             });
 
+            socket.on("device_deleted", function (payload) {
+                for (let r of rooms) {
+                    const targetDevice = findDeviceRecursive(
+                        r.devices,
+                        payload.deviceID,
+                    );
+                    if (targetDevice) {
+                        r.devices = r.devices.filter(
+                            (d) => d.deviceID !== payload.deviceID,
+                        );
+                        renderAll();
+                        break;
+                    }
+                }
+            });
+
             function findDeviceRecursive(deviceList, deviceID) {
                 for (let d of deviceList) {
                     if (d.deviceID === deviceID) return d;
@@ -120,6 +136,9 @@
                     floorTitle.innerText = `Floor ${floorName}`;
                     floorSection.appendChild(floorTitle);
 
+                    const roomGrid = document.createElement("div");
+                    roomGrid.className = "room-grid";
+
                     const roomsOnFloor = rooms.filter(
                         (r) => (r.floorName || "G") === floorName,
                     );
@@ -145,20 +164,22 @@
                         }
 
                         roomCard.appendChild(deviceList);
-                        floorSection.appendChild(roomCard);
+                        roomGrid.appendChild(roomCard);
                     });
 
+                    floorSection.appendChild(roomGrid);
                     container.appendChild(floorSection);
                 });
             }
 
             function renderDeviceCard(device, containerElement, parentIsOn) {
                 const isParentOn = parentIsOn !== undefined ? parentIsOn : true;
-                const effectiveState = (isParentOn && device.state === "ON") ? "ON" : "OFF";
+                const effectiveState =
+                    isParentOn && device.state === "ON" ? "ON" : "OFF";
                 const stateInfo = getStateInfo(effectiveState);
 
                 const card = document.createElement("div");
-                card.className = "device-card";
+                card.className = `device-card card-${stateInfo.class}`;
                 card.id = `device-${device.deviceID}`;
 
                 let extraDetails = "";
@@ -188,7 +209,7 @@
                 containerElement.appendChild(card);
 
                 if (device.subUnits && device.subUnits.length > 0) {
-                    const currentIsOn = isParentOn && (device.state === "ON");
+                    const currentIsOn = isParentOn && device.state === "ON";
                     const subContainer = card.querySelector(
                         `#subunits-${device.deviceID}`,
                     );
