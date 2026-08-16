@@ -98,7 +98,7 @@ fun DeviceCard(
     val cardBgColor = when {
         effectiveIsOn -> Color.Transparent
         device.state == DeviceState.ERROR -> Color.Red.copy(alpha = 0.15f)
-        device.state == DeviceState.DISCONNECTED -> Color.Yellow.copy(alpha = 0.1f)
+        device.state == DeviceState.DISCONNECTED -> Color.Magenta.copy(alpha = 0.1f)
         else -> Color.Transparent
     }
 
@@ -344,7 +344,8 @@ fun DeviceCard(
                             ),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-//                        StateBadge(state = if (parentOn) device.state else DeviceState.OFF)
+                        if (device.state != DeviceState.ON && device.state != DeviceState.OFF)
+                            StateBadge(state = device.state)
 
                         if (device is MultiUnit) {
                             Icon(

@@ -26,6 +26,10 @@ class MQTTInterface:
         try:
             payload = msg.payload.decode()
             jsonData = json.loads(payload)
+
+            print()
+            print(f"[\033[32mINCOMING\033[0m] Topic: {msg.topic}")
+            print(json.dumps(jsonData, indent=4))
             match msg.topic:
                 case "action/user":
                     self.deviceManager.routeUserAction(jsonData)

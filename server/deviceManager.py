@@ -137,6 +137,7 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)
         )
+        self.printResponse(payload)
 
     def handleNewDevice(self, jsonData):
         tempID = jsonData["tempID"]
@@ -152,6 +153,7 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)
         )
+        self.printResponse(payload)
 
     def handleNewRoutine(self, jsonData):
         tempRoutineID = jsonData.get("tempRoutineID")
@@ -181,6 +183,7 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)
         )
+        self.printResponse(payload)
 
     # delete data handlers
 
@@ -209,6 +212,7 @@ class DeviceManager:
             "action/server",
             json.dumps(payload)
         )
+        self.printResponse(payload)
 
     # data sync handler
 
@@ -227,6 +231,7 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "sync/response", json.dumps(payload)
         )
+        self.printResponse(payload, "sync/response")
 
     # user action handlers
 
@@ -255,6 +260,7 @@ class DeviceManager:
             "state": targetState,
         }
         self.mqttInterface.client.publish("action/server", json.dumps(payload))
+        self.printResponse(payload)
         return True
 
     def handleToggleDevice(self, jsonData):
@@ -266,6 +272,9 @@ class DeviceManager:
         safetyDevices = self.repo.fetchActiveSafetyDevices()
         if len(safetyDevices) == 0:
             return
+
+        print()
+        print(f"[\033[33mBACKGROUND WORKER\033[0m] Checking {len(safetyDevices)} Active Safety Devices")
 
         now = time.time()
         for device in safetyDevices:
@@ -301,8 +310,10 @@ class DeviceManager:
 
         for routine in enabledRoutines:
             if routine.startTime == currentTime and routine.lastTrigger != currentDate:
-                self.repo.updateRoutineLastTrigger(
-                    routine.routineID, currentDate)
+                print()
+                print(f"[\033[33mBACKGROUND WORKER\033[0m] Triggering Automated Routine")
+                
+                self.repo.updateRoutineLastTrigger(routine.routineID, currentDate)
                 self.triggerRoutine(routine.routineID)
 
     def getUsageReport(self, jsonData):
@@ -314,6 +325,7 @@ class DeviceManager:
         self.mqttInterface.client.publish(
             "action/server", json.dumps(payload)
         )
+        self.printResponse(payload)
 
     # TESTING ONLY =========================================================
 
@@ -333,3 +345,8 @@ class DeviceManager:
         if action == "sql":
             statement = jsonData.get("stmt", "")
             print(self.repo.runSQL(statement))
+
+    def printResponse(self, payload, topic="action/server"):
+        print()
+        print(f"[\033[31mOUTGOING\033[0m] Topic: {topic}")
+        print(json.dumps(payload, indent=4))
