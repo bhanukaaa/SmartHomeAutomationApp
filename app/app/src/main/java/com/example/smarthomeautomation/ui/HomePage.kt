@@ -114,9 +114,10 @@ fun HomePage(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFA6767A), // Top-Right: Muted Terracotta Brick
-                            Color(0xFF5D748A)  ,// Bottom-Left: Muted Slate Blue, // Center: Bright Pale Lilac
-                            Color(0xFF5A756C)  // Bottom-Left: Pale Soft Sage
+                            Color(0xFFA6767A), // 1. Your Muted Terracotta
+                            Color(0xFF5D748A), // 2. Your Muted Slate Blue
+                            Color(0xFF425363), // NEW: Deep Steel Shadow (Improves front-end contrast)
+                            Color(0xFF5A756C) // Bottom-Left: Pale Soft Sage
                         ),
                         start = Offset.Infinite,
                         end = Offset.Zero

@@ -71,9 +71,10 @@ fun AddRoomPage(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFA6767A),
-                            Color(0xFF5D748A),
-                            Color(0xFF5A756C)
+                            Color(0xFF9E868D), // Top: Dusty Winter Plum
+                            Color(0xFF4A5C61), // Middle: Desaturated Charcoal-Teal
+                            Color(0xFF414E46)// Middle: Cool Smoke Gray
+                            // 3. Your Pale Soft Sage (Bottom)
                         ),
                         start = Offset.Infinite,
                         end = Offset.Zero

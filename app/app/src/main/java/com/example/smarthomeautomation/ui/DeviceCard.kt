@@ -70,14 +70,17 @@ fun DeviceCard(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val rawIsOn = device.state == DeviceState.ON
+    val isClicked : Boolean = false
     val effectiveIsOn = rawIsOn && parentOn
     val isInteractive =
         device.state != DeviceState.ERROR && device.state != DeviceState.DISCONNECTED
 
     val onGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFF818CF8).copy(alpha = 0.25f), // Soft Indigo
-            Color(0xFF304FFE).copy(alpha = 0.25f)  // Soft Purple
+            Color(0xFFE55D87).copy(alpha = 0.20f), // Soft Indigo
+            Color(0xFFFF8C7B).copy(alpha = 0.20f),  // Soft PurpleColor
+            Color(0xFFFFC3A0).copy(alpha = 0.20f)  // Soft Purple
+
         )
     )
 
@@ -199,6 +202,8 @@ fun DeviceCard(
                     }
                 }
             }
+
+
 
             if (device is MultiUnit) {
                 AnimatedVisibility(

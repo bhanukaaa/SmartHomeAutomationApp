@@ -93,9 +93,9 @@ fun AddDevicePage(
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFA6767A), // Top-Right: Muted Terracotta Brick
-                            Color(0xFF5D748A), // Bottom-Left: Muted Slate Blue
-                            Color(0xFF5A756C)  // Bottom-Left: Pale Soft Sage
+                            Color(0xFFB5A18C), // Top: Muted Soft Ochre
+                            Color(0xFF4B5466), // Middle: Desaturated Velvet Indigo
+                            Color(0xFF354247)  // Bottom: Deep Charcoal-Teal Base // Bottom: Deep Twilight Charcoal// Bottom-Left: Pale Soft Sage
                         ),
                         start = Offset.Infinite,
                         end = Offset.Zero
@@ -337,7 +337,7 @@ fun AddDevicePage(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF10B981), // Mac Green to match switches
+                        containerColor = Color(0xFF10B981).copy(alpha = 0.40f), // Mac Green to match switches
                         contentColor = Color.White,
                         disabledContainerColor = Color.White.copy(alpha = 0.12f),
                         disabledContentColor = Color.White.copy(alpha = 0.38f)
