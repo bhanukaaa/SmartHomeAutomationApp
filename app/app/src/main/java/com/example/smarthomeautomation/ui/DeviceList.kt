@@ -30,25 +30,39 @@ private sealed class DeviceRow {
 
 private fun prepareDeviceRows(devices: List<Device>): List<DeviceRow> {
     val rows = mutableListOf<DeviceRow>()
-    var i = 0
-    while (i < devices.size) {
-        val current = devices[i]
+    val remaining = devices.toMutableList()
+    var trailingSingle: Device? = null
+
+    while (remaining.isNotEmpty()) {
+        val current = remaining.removeAt(0)
         if (current is MultiUnit) {
             rows.add(DeviceRow.FullWidth(current))
-            i++
         } else {
-            val next = devices.getOrNull(i + 1)
-            if (next != null && next !is MultiUnit) {
-                rows.add(DeviceRow.Pair(current, next))
-                i += 2
+            val nextIndex = remaining.indexOfFirst { it !is MultiUnit }
+            if (nextIndex != -1) {
+                val pairDevice = remaining.removeAt(nextIndex)
+                rows.add(DeviceRow.Pair(current, pairDevice))
             } else {
-                rows.add(DeviceRow.Pair(current, null))
-                i++
+                trailingSingle = current
+                break
             }
         }
     }
+
+    while (remaining.isNotEmpty()) {
+        val device = remaining.removeAt(0)
+        if (device is MultiUnit) {
+            rows.add(DeviceRow.FullWidth(device))
+        }
+    }
+
+    if (trailingSingle != null) {
+        rows.add(DeviceRow.Pair(trailingSingle, null))
+    }
+
     return rows
 }
+
 
 @Composable
 fun DeviceList(
